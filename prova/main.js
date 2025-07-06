@@ -1,9 +1,12 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
-import * as CANNON from 'cannon-es';
-import { loadWorld, grassMeshes, groundMesh, updateGrass} from './environment.js';
+import { loadWorld, grassMeshes, groundMesh, updateGrass } from './environment.js';
 import { CharacterController } from './characterController.js';
 import { setupLights } from './lighting.js';
+import { RAPIER } from './physics.js';
+import { physicsWorld } from './physics.js';
+import { visualizeColliders } from './physics.js';
+
 
 // === SCENA, CAMERA, RENDERER ===
 const scene = new THREE.Scene();
@@ -23,79 +26,204 @@ controls.enableDamping = true;
 
 // === LUCI ===
 setupLights(scene);
-
 renderer.shadowMap.enabled = true;
 renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 
-// === MONDO ===
-loadWorld(scene);
+// === INIZIALIZZAZIONE ===
+let characterController = null;
+let isInitialized = false;
 
-// ======= FISICA DEL MONDO ========
-const world = new CANNON.World({ gravity: new CANNON.Vec3(0, -9.82, 0) });
-const timeStep = 1 / 60;
+async function init() {
+    try {
+        console.log('Initializing physics...');
 
-// === CREAZIONE CORPO FISICO DEL TERRENO ===
-function createGroundBody() {
-  if (!groundMesh) {
-    setTimeout(createGroundBody, 100);
-    return;
-  }
+        // Inizializza la fisica
+        const physicsReady = await physicsWorld.init();
+        if (!physicsReady) {
+            throw new Error('Failed to initialize physics');
+        }
 
-  groundMesh.receiveShadow = true;
-  const bbox = new THREE.Box3().setFromObject(groundMesh);
-  const size = new THREE.Vector3();
-  const center = new THREE.Vector3();
-  bbox.getSize(size);
-  bbox.getCenter(center);
+        console.log('Loading world...');
 
-  const shape = new CANNON.Box(new CANNON.Vec3(size.x / 2, size.y / 2, size.z / 2));
-  const groundBody = new CANNON.Body({
-    mass: 0,
-    shape: shape,
-    position: new CANNON.Vec3(center.x, center.y, center.z)
-  });
+        // Carica il mondo (ora include la fisica)
+        await loadWorld(scene);
 
-  world.addBody(groundBody);
+        console.log('Initializing character controller...');
+
+
+        // Inizializza il controller del personaggio
+        characterController = new CharacterController(scene, camera, controls);
+
+        isInitialized = true;
+        console.log('Game initialized successfully!');
+
+        // Mostra le istruzioni
+        showInstructions();
+
+    } catch (error) {
+        console.error('Initialization error:', error);
+
+        // Fallback: inizializza senza fisica
+        console.log('Falling back to initialization without physics...');
+        try {
+            await loadWorldWithoutPhysics();
+            characterController = new CharacterController(scene, camera, controls);
+            isInitialized = true;
+            console.log('Game initialized without physics');
+            showInstructions();
+        } catch (fallbackError) {
+            console.error('Fallback initialization failed:', fallbackError);
+            document.body.innerHTML = '<div style="color: red; font-size: 24px; text-align: center; margin-top: 50px;">Errore nel caricamento del gioco</div>';
+        }
+    }
 }
-createGroundBody();
 
-// === CONTROLLER PERSONAGGIO ===
-const characterController = new CharacterController(scene, world, camera, controls);
+// Fallback per caricare il mondo senza fisica
+async function loadWorldWithoutPhysics() {
+    const { GLTFLoader } = await import('three/addons/loaders/GLTFLoader.js');
+    const loader = new GLTFLoader();
+
+    return new Promise((resolve, reject) => {
+        loader.load('assets/models/mondo.glb', function (gltf) {
+            const world = gltf.scene;
+            world.position.set(0, 0, 0);
+
+            world.traverse(child => {
+                if (child.isMesh) {
+                    child.castShadow = true;
+                    child.receiveShadow = true;
+                }
+            });
+
+            scene.add(world);
+            resolve(world);
+        }, undefined, reject);
+    });
+}
+
+
+let collidersShown = false;
+let colliderVisuals = [];
+
+window.addEventListener('keydown', (event) => {
+  if (event.key === '9') {
+    if (!collidersShown) {
+      colliderVisuals = visualizeColliders(scene);
+      collidersShown = true;
+    } else {
+      colliderVisuals.forEach(mesh => scene.remove(mesh));
+      colliderVisuals = [];
+      collidersShown = false;
+    }
+  }
+});
+
 
 // === ANIMATE LOOP ===
 function animate() {
-  requestAnimationFrame(animate);
+    requestAnimationFrame(animate);
 
-  // I controlli orbit vengono disabilitati automaticamente dal character controller
-  // quando la telecamera in terza persona è attiva
-  if (controls.enabled) {
-    controls.update();
-  }
-  
-  world.step(timeStep);
+    if (!isInitialized) return;
 
-  // Update personaggio (che include anche l'aggiornamento della telecamera)
-  characterController.update();
+    // Aggiorna i controlli orbit se abilitati
+    if (controls.enabled) {
+        controls.update();
+    }
 
-  // Update erba dinamica
-  const playerPosition = characterController.getPlayerPosition();
-  const t = performance.now() / 1000;
-  updateGrass(playerPosition, t);
-  
-  renderer.render(scene, camera);
+    // Calcola deltaTime per la fisica e il movimento
+    const deltaTime = 1 / 60; // Fixed timestep per la fisica
+
+    // Aggiorna la fisica
+    if (physicsWorld.ready) {
+        physicsWorld.update(deltaTime);
+    }
+
+    // Aggiorna il personaggio (include l'aggiornamento della telecamera)
+    if (characterController) {
+        characterController.update(deltaTime); // Passa deltaTime al characterController
+
+        // Aggiorna l'erba dinamica
+        const playerPosition = characterController.getPlayerPosition();
+        const t = performance.now() / 1000;
+        updateGrass(playerPosition, t);
+    }
+
+    renderer.render(scene, camera);
 }
-animate();
+
+
 
 // === RESIZE ===
 window.addEventListener('resize', () => {
-  camera.aspect = window.innerWidth / window.innerHeight;
-  camera.updateProjectionMatrix();
-  renderer.setSize(window.innerWidth, window.innerHeight);
+    camera.aspect = window.innerWidth / window.innerHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(window.innerWidth, window.innerHeight);
 });
 
 // === ISTRUZIONI PER L'UTENTE ===
-console.log('=== CONTROLLI ===');
-console.log('WASD: Movimento (relativo alla telecamera)');
-console.log('Shift + WASD: Corsa');
-console.log('Mouse (click sinistro + trascina): Ruota telecamera');
-console.log('Scroll del mouse: Zoom in/out');
+function showInstructions() {
+    console.log('=== CONTROLLI ===');
+    console.log('WASD: Movimento');
+    console.log('Shift + WASD: Corsa');
+    console.log('Mouse (click sinistro + trascina): Ruota telecamera');
+    console.log('Scroll del mouse: Zoom in/out');
+    console.log('');
+    console.log('=== DEBUG CONTROLLI ===');
+    console.log('P: Mostra informazioni fisica');
+    console.log('R: Reset posizione personaggio');
+    console.log('G: Test gravità (solleva personaggio)');
+    console.log('W: Toggle wireframe corpo fisico');
+
+    if (physicsWorld.ready) {
+        console.log('Physics enabled');
+    } else {
+        console.log('Physics disabled (fallback mode)');
+    }
+}
+
+// === DEBUG INFO ===
+window.addEventListener('keydown', (event) => {
+    // Premi 'P' per informazioni sulla fisica
+    if (event.key.toLowerCase() === 'p' && physicsWorld.ready) {
+        console.log('=== PHYSICS INFO ===');
+        console.log('Static bodies:', physicsWorld.staticBodies.length);
+        console.log('Physics world ready:', physicsWorld.ready);
+
+        if (characterController) {
+            const pos = characterController.getPlayerPosition();
+            console.log('Player position:', pos);
+
+            // Informazioni fisiche del personaggio
+            const physicsInfo = characterController.getPhysicsInfo();
+            if (physicsInfo) {
+                console.log('=== CHARACTER PHYSICS ===');
+                console.log('Position:', physicsInfo.position);
+                console.log('Velocity:', physicsInfo.velocity);
+                console.log('Height:', physicsInfo.characterHeight);
+                console.log('Radius:', physicsInfo.characterRadius);
+            }
+        }
+    }
+
+    // Premi 'R' per resettare la posizione del personaggio
+    if (event.key.toLowerCase() === 'r' && characterController) {
+        console.log('Resetting character position...');
+        characterController.setPosition(0, 2, 0);
+    }
+
+    // Premi 'G' per testare la gravità (far cadere il personaggio)
+    if (event.key.toLowerCase() === 'g' && characterController) {
+        console.log('Testing gravity...');
+        characterController.setPosition(0, 10, 0);
+    }
+
+    // Premi 'W' per attivare/disattivare il wireframe del corpo fisico
+    if (event.key.toLowerCase() === 'h' && characterController) {
+        characterController.toggleWireframe();
+    }
+});
+
+// === AVVIO ===
+init().then(() => {
+    animate();
+});
