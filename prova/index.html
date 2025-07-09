@@ -5,10 +5,53 @@
     <title>My first three.js app</title>
     <style>
       body { margin: 0; }
+
+      #interactionPrompt {
+        position: absolute;
+        bottom: 10%;
+        width: 100%;
+        text-align: center;
+        font-size: 40px;
+        color: white;
+        text-shadow: 1px 1px 2px black;
+        font-family: sans-serif;
+        display: none;
+        pointer-events: none;
+        z-index: 10;
+      }
     </style>
   </head>
   <body>
+    <!-- Messaggio interazione -->
+    <div id="interactionPrompt">Premi F</div>
+<div id="dialogueBox" style="
+  position: absolute;
+  bottom: 120px;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 20px 28px;
+  background: linear-gradient(to right, rgba(20, 20, 20, 0.95), rgba(40, 40, 40, 0.95));
+  color: #ffecc7;
+  font-family: 'Georgia', serif;
+  font-size: 32px;
+  font-weight: bold;
+  border: 2px solid #fff;
+  border-radius: 16px;
+  box-shadow: 0 0 15px #ffffffaa;
+  max-width: 90%;
+  text-align: center;
+  display: none;
+  z-index: 10;
+  white-space: pre-line;
+  line-height: 1.4;
+"></div>
+
+
+
+
+
+
+    <!-- Script principale -->
     <script type="module" src="/main.js"></script>
   </body>
 </html>
-    

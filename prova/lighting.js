@@ -19,8 +19,18 @@ export function setupLights(scene) {
   scene.add(directionalLight);
   scene.add(ambientLight);
 
-  return {
+  currentLights = {
     directionalLight,
     ambientLight
   };
+
+  return currentLights;
 }
+
+
+let currentLights = null;
+
+export function getLights() {
+  return currentLights;
+}
+

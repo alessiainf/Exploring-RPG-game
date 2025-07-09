@@ -1,17 +1,27 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
-import { loadWorld, grassMeshes, groundMesh, updateGrass } from './environment.js';
+import { loadWorld, grassMeshes, groundMesh, updateGrass, updateFlower } from './environment.js';
 import { CharacterController } from './characterController.js';
 import { setupLights } from './lighting.js';
-import { RAPIER } from './physics.js';
-import { physicsWorld } from './physics.js';
-import { visualizeColliders } from './physics.js';
+import { physicsWorld, visualizeColliders } from './physics.js';
+import { initGameState } from './GameState.js';
+import {
+  loadStatues,
+  loadWizard,
+  loadNecklace,
+  loadHintObject,
+  updateBreathing,
+  updateInteraction,
+  updateNecklace,
+} from './Statuegame.js';
+import { initWeather, updateWeather } from './Weather.js';
 
 
 // === SCENA, CAMERA, RENDERER ===
 const scene = new THREE.Scene();
 scene.background = new THREE.Color(0x87ceeb);
 scene.fog = new THREE.Fog(0xaaaaaa, 10, 50);
+const clock = new THREE.Clock();
 
 const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 1, 500);
 camera.position.set(0, 3, -6);
@@ -28,6 +38,13 @@ controls.enableDamping = true;
 setupLights(scene);
 renderer.shadowMap.enabled = true;
 renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+
+//wizard game
+await loadStatues(scene);
+await loadWizard(scene);
+await loadNecklace(scene);
+await loadHintObject(scene);
+
 
 // === INIZIALIZZAZIONE ===
 let characterController = null;
@@ -59,6 +76,8 @@ async function init() {
 
         // Mostra le istruzioni
         showInstructions();
+        initWeather(scene);
+
 
     } catch (error) {
         console.error('Initialization error:', error);
@@ -123,6 +142,9 @@ window.addEventListener('keydown', (event) => {
 function animate() {
     requestAnimationFrame(animate);
 
+    const delta = clock.getDelta();
+
+
     if (!isInitialized) return;
 
     // Aggiorna i controlli orbit se abilitati
@@ -142,15 +164,24 @@ function animate() {
     if (characterController) {
         characterController.update(deltaTime); // Passa deltaTime al characterController
 
-        // Aggiorna l'erba dinamica
+        // Aggiorna l'erba dinamica e i fiori
         const playerPosition = characterController.getPlayerPosition();
         const t = performance.now() / 1000;
         updateGrass(playerPosition, t);
+        updateFlower(playerPosition, t);
     }
+
+    // wizard game
+    updateBreathing(delta);
+    updateNecklace(delta);
+    updateInteraction(characterController.getPlayerPosition(), scene);
+    updateWeather(characterController.getPlayerPosition());
+
 
     renderer.render(scene, camera);
 }
 
+initGameState();
 
 
 // === RESIZE ===
@@ -173,6 +204,8 @@ function showInstructions() {
     console.log('R: Reset posizione personaggio');
     console.log('G: Test gravità (solleva personaggio)');
     console.log('W: Toggle wireframe corpo fisico');
+    console.log('H: Rimuovi/aggiugni wireframe corpo fisico');
+    console.log('9: Rimuovi/aggiungi visualizzazione dei collider');
 
     if (physicsWorld.ready) {
         console.log('Physics enabled');

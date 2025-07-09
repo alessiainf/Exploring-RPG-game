@@ -1,14 +1,13 @@
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { physicsWorld } from './physics.js';
+import { statues, wizard} from './Statuegame.js';
 
 export const grassMeshes = [];
+export const flowerMeshes = [];
 export const treeMeshes = [];
+export const rockMeshes = [];
 export let groundMesh = null;
-
-///come sto genstendo la fisica? in pratica in blender creo un mondo con un piano, 
-// e degli alberi, poi creo i collider per questi oggetti. cioè identifico le mesh e poi gestsco
-// le collisioni con queste mesh nel file physics.js 
 
 // Carica il modello del mondo creato in Blender
 export async function loadWorld(scene) {
@@ -29,43 +28,46 @@ export async function loadWorld(scene) {
         if (child.isMesh) {
           child.castShadow = true;
           child.receiveShadow = true;
-          
         }
         
         // Identifica il terreno
-        if (child.name.toLowerCase().includes("plane") || 
-            child.name.toLowerCase().includes("ground") ||
-            child.name.toLowerCase().includes("terrain")) {
+        if (child.name.toLowerCase().includes("plane")) {
           groundMesh = child;
-          console.log('Ground mesh found:', child.name);
+          child.material = new THREE.MeshStandardMaterial({ color: 0x3C7626}); // forest green
         }
         
         // Identifica l'erba
         if (child.isMesh && child.name.toLowerCase().includes("grass")) {
           grassMeshes.push(child);
         }
+
+        // Identifica i fiori
+        if (child.isMesh && child.name.toLowerCase().includes("flower")) {
+          flowerMeshes.push(child);
+        }
         
         // Identifica gli alberi
         if (child.name.toLowerCase().includes("tree")) {
           treeMeshes.push(child);
+        }
+
+        // Identifica le rocce
+        if (child.name.toLowerCase().includes("rock")) {
+          rockMeshes.push(child);
         }
       });
       
       scene.add(world);
       
       // Aggiungi i collider fisici dopo aver caricato il mondo
-      //è una funzione che richiama le funzioni di physics.js per aggiungere i collider (vedi dopo)
       setupWorldPhysics();
       
       console.log('World loaded with physics');
-      console.log(`- Ground mesh: ${groundMesh ? groundMesh.name : 'none'}`);
-      console.log(`- Trees: ${treeMeshes.length}`);
-      console.log(`- Grass patches: ${grassMeshes.length}`);
       
       resolve(world);
     }, 
     function(progress) {
-      console.log('Loading progress:', (progress.loaded / progress.total * 100) + '%');
+      // console.log('Loading progress:', (progress.loaded / progress.total * 100) + '%');
     },
     function (error) {
       console.error('Error loading world model:', error);
@@ -91,8 +93,21 @@ function setupWorldPhysics() {
     physicsWorld.addTreeColliders(treeMeshes);
   }
 
-  // Puoi aggiungere altri collider qui per oggetti specifici
-  // Ad esempio, rocce, edifici, ecc.
+  // Aggiungi collider per le rocce
+  if (rockMeshes.length > 0) {
+    physicsWorld.addrockColliders(rockMeshes);
+  }
+
+  // Aggiungi collider per le statue (se già caricate)
+  if (statues.length > 0) {
+    physicsWorld.addStatueColliders(statues);
+  }
+
+  // Aggiungi collider per il mago (se già caricato)
+  if (wizard) {
+    physicsWorld.addWizardCollider(wizard);
+  }
+
 }
 
 // Funzione helper per ottenere l'altezza del terreno in una posizione
@@ -111,10 +126,34 @@ export function checkCollision(origin, direction, maxDistance = 10) {
   return null;
 }
 
-// Aggiorna l'erba dinamica (manteniamo la funzione esistente)
+// Aggiorna l'erba dinamica 
 export function updateGrass(playerPosition, time) {
   grassMeshes.forEach((mesh, i) => {
-    const baseSway = Math.sin(time + i * 0.3) * 0.05;
+    const baseSway = Math.sin(time + i * 0.3) * 0.1;
+    const distance = mesh.position.distanceTo(playerPosition);
+    
+    if (distance < 1.5) {
+      const away = new THREE.Vector3().subVectors(mesh.position, playerPosition).normalize();
+      const angle = Math.atan2(away.z, away.x);
+      const targetX = 0.1 * Math.cos(angle);
+      const targetZ = 0.1 * Math.sin(angle);
+      
+      mesh.rotation.x = THREE.MathUtils.lerp(mesh.rotation.x, targetX, 0.2);
+      mesh.rotation.z = THREE.MathUtils.lerp(mesh.rotation.z, targetZ, 0.2);
+    } else {
+      const targetX = baseSway * 0.3;
+      const targetZ = baseSway * 0.3;
+      
+      mesh.rotation.x = THREE.MathUtils.lerp(mesh.rotation.x, targetX, 0.05);
+      mesh.rotation.z = THREE.MathUtils.lerp(mesh.rotation.z, targetZ, 0.05);
+    }
+  });
+}
+
+// Aggiorna i fiori dinamici
+export function updateFlower(playerPosition, time) {
+  flowerMeshes.forEach((mesh, i) => {
+    const baseSway = Math.sin(time + i * 0.3) * 0.1;
     const distance = mesh.position.distanceTo(playerPosition);
     
     if (distance < 1.5) {
@@ -138,7 +177,9 @@ export function updateGrass(playerPosition, time) {
 // Pulisci le risorse quando necessario
 export function cleanupWorld() {
   grassMeshes.length = 0;
+  flowerMeshes.length = 0;
   treeMeshes.length = 0;
+  rockMeshes.length = 0;
   groundMesh = null;
   physicsWorld.cleanup();
 }

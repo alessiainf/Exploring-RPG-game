@@ -76,7 +76,7 @@ export class PhysicsWorld {
         this.meshToBody.set(groundMesh, collider);
         this.bodyToMesh.set(collider, groundMesh);
 
-        console.log('Ground collider added');
+        //console.log('Ground collider added');
         return collider;
       } else {
         // Per geometrie complesse, usa trimesh (più pesante ma preciso)
@@ -126,60 +126,142 @@ export class PhysicsWorld {
       }
     });
 
-    console.log(`Added ${colliders.length} tree colliders`);
+    //console.log(`Added ${colliders.length} tree colliders`);
     return colliders;
   }
 
-  /*
-  // Aggiunge collider trimesh per geometrie complesse
-  addTrimeshCollider(mesh) {
-    if (!this.ready || !mesh) return null;
+// Aggiunge collider statici (box) per le rocce
+addrockColliders(rockMeshes) {
+  if (!this.ready || !rockMeshes.length) return [];
 
+  const colliders = [];
+
+  rockMeshes.forEach((rockMesh, index) => {
     try {
-      const geometry = mesh.geometry;
-      
-      // Ottieni i vertici e gli indici
-      const vertices = geometry.attributes.position.array;
-      const indices = geometry.index ? geometry.index.array : null;
+      // Calcola il bounding box della roccia
+      const bbox = new THREE.Box3().setFromObject(rockMesh);
+      const size = bbox.getSize(new THREE.Vector3());
 
-      // Applica la trasformazione del mesh ai vertici
-      const worldMatrix = mesh.matrixWorld;
-      const transformedVertices = new Float32Array(vertices.length);
-      
-      for (let i = 0; i < vertices.length; i += 3) {
-        const vertex = new THREE.Vector3(vertices[i], vertices[i + 1], vertices[i + 2]);
-        vertex.applyMatrix4(worldMatrix);
-        transformedVertices[i] = vertex.x;
-        transformedVertices[i + 1] = vertex.y;
-        transformedVertices[i + 2] = vertex.z;
-      }
+      // Calcola le dimensioni del box (serve metà estensione)
+      const halfExtents = {
+        x: size.x * 0.3,
+        y: size.y * 0.3,
+        z: size.z * 0.39
+      };
 
-      let colliderDesc;
-      if (indices) {
-        colliderDesc = RAPIER.ColliderDesc.trimesh(transformedVertices, indices);
-      } else {
-        // Se non ci sono indici, crea indici sequenziali
-        const autoIndices = new Uint32Array(vertices.length / 3);
-        for (let i = 0; i < autoIndices.length; i++) {
-          autoIndices[i] = i;
-        }
-        colliderDesc = RAPIER.ColliderDesc.trimesh(transformedVertices, autoIndices);
-      }
+      // Crea un collider box (cuboid)
+      const colliderDesc = RAPIER.ColliderDesc.cuboid(
+        halfExtents.x,
+        halfExtents.y,
+        halfExtents.z
+      );
+
+      // Calcola la posizione della roccia nel mondo
+      const position = rockMesh.getWorldPosition(new THREE.Vector3());
+
+      // Sposta il collider nel punto giusto (metà altezza in Y)
+      colliderDesc.setTranslation(
+        position.x,
+        position.y + halfExtents.y,
+        position.z
+      );
+
+      // Crea il collider nel mondo fisico
+      const collider = this.world.createCollider(colliderDesc);
+
+      // Mappa la mesh al collider
+      this.staticBodies.push(collider);
+      this.meshToBody.set(rockMesh, collider);
+      this.bodyToMesh.set(collider, rockMesh);
+
+      colliders.push(collider);
+    } catch (error) {
+      console.error(`Errore durante il collider della roccia ${index}:`, error);
+    }
+  });
+
+  //console.log(`Aggiunti ${colliders.length} collider per rocce`);
+  return colliders;
+}
+
+
+addStatueColliders(statueMeshes) {
+  if (!this.ready || !statueMeshes.length) return [];
+
+  const colliders = [];
+
+  statueMeshes.forEach((statueMesh, index) => {
+    try {
+      // Calcola le dimensioni approssimative della statua
+      const bbox = new THREE.Box3().setFromObject(statueMesh);
+      const size = bbox.getSize(new THREE.Vector3());
+      
+      // Usa un cilindro come collider per la statua
+      const radius = Math.max(size.x, size.z) * 0.25; // Raggio della base
+      const height = size.y * 0.7; // Altezza del collider
+
+      const colliderDesc = RAPIER.ColliderDesc.cylinder(height * 0.5, radius);
+
+      // Posiziona il collider
+      const position = statueMesh.getWorldPosition(new THREE.Vector3());
+      colliderDesc.setTranslation(
+        position.x, 
+        position.y + height * 0.01, 
+        position.z
+      );
 
       const collider = this.world.createCollider(colliderDesc);
       
       this.staticBodies.push(collider);
-      this.meshToBody.set(mesh, collider);
-      this.bodyToMesh.set(collider, mesh);
+      this.meshToBody.set(statueMesh, collider);
+      this.bodyToMesh.set(collider, statueMesh);
 
-      console.log('Trimesh collider added for', mesh.name || 'unnamed mesh');
-      return collider;
+      colliders.push(collider);
     } catch (error) {
-      console.error('Error adding trimesh collider:', error);
-      return null;
+      console.error(`Error adding statue collider ${index}:`, error);
     }
+  });
+
+  console.log(`Added ${colliders.length} statue colliders`);
+  return colliders;
+}
+
+// Aggiunge collider cilindrico per il mago
+addWizardCollider(wizardMesh) {
+  if (!this.ready || !wizardMesh) return null;
+
+  try {
+    // Calcola le dimensioni approssimative del mago
+    const bbox = new THREE.Box3().setFromObject(wizardMesh);
+    const size = bbox.getSize(new THREE.Vector3());
+    
+    // Usa un cilindro come collider per il mago
+    const radius = Math.max(size.x, size.z) * 0.02; // Raggio più piccolo per il mago
+    const height = size.y * 0.6; // Altezza del collider
+
+    const colliderDesc = RAPIER.ColliderDesc.cylinder(height * 0.5, radius);
+
+    // Posiziona il collider
+    const position = wizardMesh.getWorldPosition(new THREE.Vector3());
+    colliderDesc.setTranslation(
+      position.x, 
+      position.y + height * 0.5, 
+      position.z
+    );
+
+    const collider = this.world.createCollider(colliderDesc);
+    
+    this.staticBodies.push(collider);
+    this.meshToBody.set(wizardMesh, collider);
+    this.bodyToMesh.set(collider, wizardMesh);
+
+    console.log('Wizard collider added');
+    return collider;
+  } catch (error) {
+    console.error('Error adding wizard collider:', error);
+    return null;
   }
-*/
+}
   
 
   // Aggiorna il mondo fisico

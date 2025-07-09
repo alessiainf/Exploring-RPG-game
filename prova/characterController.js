@@ -119,8 +119,8 @@ export class CharacterController {
             }
 
             this.addEventListeners();
-            console.log('Character loaded with physics');
-            console.log(`Height: ${this.characterHeight.toFixed(2)}, Radius: ${this.characterRadius.toFixed(2)}`);
+            //console.log('Character loaded with physics');
+            //console.log(`Height: ${this.characterHeight.toFixed(2)}, Radius: ${this.characterRadius.toFixed(2)}`);
         });
     }
 
@@ -148,7 +148,7 @@ export class CharacterController {
             //i will control the forces
             const rigidBodyDesc = RAPIER.RigidBodyDesc.kinematicPositionBased();
             
-            const startPosition = { x: 0, y: totalHeight*0.5, z: 0 };
+            const startPosition = { x: 18, y: totalHeight*0.47, z: -30 };
             rigidBodyDesc.setTranslation(startPosition.x, startPosition.y, startPosition.z);
 
             rigidBodyDesc.lockRotations(true, false, true);
@@ -163,7 +163,7 @@ export class CharacterController {
             //used to allign the model with the physics body during movement
             this.updatePhysicsPosition();
 
-            console.log('Character physics body created');
+            //console.log('Character physics body created');
         } catch (error) {
             console.error('Error creating character physics body:', error);
         }
@@ -212,7 +212,7 @@ export class CharacterController {
         this.debugWireframe = group;
         this.scene.add(this.debugWireframe);
 
-        console.log('Debug wireframe created');
+        //console.log('Debug wireframe created');
     }
 
     updateDebugWireframe() {
@@ -233,7 +233,7 @@ export class CharacterController {
 
     toggleWireframe() {
         this.showWireframe = !this.showWireframe;
-        console.log('Wireframe:', this.showWireframe ? 'ON' : 'OFF');
+        //console.log('Wireframe:', this.showWireframe ? 'ON' : 'OFF');
     }
 
     // Aggiorna la posizione del modello in base alla fisica
