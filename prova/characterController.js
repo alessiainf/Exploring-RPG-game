@@ -72,6 +72,8 @@ export class CharacterController {
                     child.receiveShadow = true;
                 }
             });
+            model.rotation.y = Math.PI/2; 
+
 
             this.mixer = new THREE.AnimationMixer(model);
 
@@ -148,7 +150,10 @@ export class CharacterController {
             //i will control the forces
             const rigidBodyDesc = RAPIER.RigidBodyDesc.kinematicPositionBased();
             
-            const startPosition = { x: 18, y: totalHeight*0.47, z: -30 };
+            //statue
+            //const startPosition = { x: 18, y: totalHeight*0.47, z: -30 };
+            //start game
+            const startPosition = { x: -15, y: totalHeight*0.47, z: -5 };
             rigidBodyDesc.setTranslation(startPosition.x, startPosition.y, startPosition.z);
 
             rigidBodyDesc.lockRotations(true, false, true);

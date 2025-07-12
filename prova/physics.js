@@ -184,6 +184,46 @@ addrockColliders(rockMeshes) {
   return colliders;
 }
 
+addColumnColliders(columnMeshes) {
+  if (!this.ready || !columnMeshes.length) return [];
+
+  const colliders = [];
+
+ columnMeshes.forEach((columnMeshes, index) => {
+    try {
+      // Calcola le dimensioni approssimative della statua
+      const bbox = new THREE.Box3().setFromObject(columnMeshes);
+      const size = bbox.getSize(new THREE.Vector3());
+      
+      // Usa un cilindro come collider per la statua
+      const radius = Math.max(size.x, size.z) * 0.30; // Raggio della base
+      const height = size.y * 0.7; // Altezza del collider
+
+      const colliderDesc = RAPIER.ColliderDesc.cylinder(height * 0.5, radius);
+
+      // Posiziona il collider
+      const position = columnMeshes.getWorldPosition(new THREE.Vector3());
+      colliderDesc.setTranslation(
+        position.x-0.9, 
+        position.y -3, 
+        position.z
+      );
+
+      const collider = this.world.createCollider(colliderDesc);
+      
+      this.staticBodies.push(collider);
+      this.meshToBody.set(columnMeshes, collider);
+      this.bodyToMesh.set(collider, columnMeshes);
+
+      colliders.push(collider);
+    } catch (error) {
+      console.error(`Error adding statue collider ${index}:`, error);
+    }
+  });
+    console.log(`Added ${colliders.length} statue colliders`);
+  return colliders;
+}
+
 
 addStatueColliders(statueMeshes) {
   if (!this.ready || !statueMeshes.length) return [];

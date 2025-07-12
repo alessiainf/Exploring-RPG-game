@@ -7,6 +7,7 @@ export const grassMeshes = [];
 export const flowerMeshes = [];
 export const treeMeshes = [];
 export const rockMeshes = [];
+export const columnMeshes = [];
 export let groundMesh = null;
 
 // Carica il modello del mondo creato in Blender
@@ -55,6 +56,11 @@ export async function loadWorld(scene) {
         if (child.name.toLowerCase().includes("rock")) {
           rockMeshes.push(child);
         }
+
+        // Identifica colonne
+        if (child.name.toLowerCase().includes("column")) {
+          columnMeshes.push(child);
+        }
       });
       
       scene.add(world);
@@ -99,6 +105,11 @@ function setupWorldPhysics() {
   }
 
   // Aggiungi collider per le statue (se già caricate)
+  if (columnMeshes.length > 0) {
+    physicsWorld.addColumnColliders(columnMeshes);
+  }
+
+   // Aggiungi collider per le colonne (se già caricate)
   if (statues.length > 0) {
     physicsWorld.addStatueColliders(statues);
   }
@@ -154,25 +165,15 @@ export function updateGrass(playerPosition, time) {
 export function updateFlower(playerPosition, time) {
   flowerMeshes.forEach((mesh, i) => {
     const baseSway = Math.sin(time + i * 0.3) * 0.1;
-    const distance = mesh.position.distanceTo(playerPosition);
-    
-    if (distance < 1.5) {
-      const away = new THREE.Vector3().subVectors(mesh.position, playerPosition).normalize();
-      const angle = Math.atan2(away.z, away.x);
-      const targetX = 0.1 * Math.cos(angle);
-      const targetZ = 0.1 * Math.sin(angle);
-      
-      mesh.rotation.x = THREE.MathUtils.lerp(mesh.rotation.x, targetX, 0.2);
-      mesh.rotation.z = THREE.MathUtils.lerp(mesh.rotation.z, targetZ, 0.2);
-    } else {
-      const targetX = baseSway * 0.3;
-      const targetZ = baseSway * 0.3;
-      
-      mesh.rotation.x = THREE.MathUtils.lerp(mesh.rotation.x, targetX, 0.05);
-      mesh.rotation.z = THREE.MathUtils.lerp(mesh.rotation.z, targetZ, 0.05);
-    }
+
+    const targetX = baseSway * 0.3;
+    const targetZ = baseSway * 0.3;
+
+    mesh.rotation.x = THREE.MathUtils.lerp(mesh.rotation.x, targetX, 0.05);
+    mesh.rotation.z = THREE.MathUtils.lerp(mesh.rotation.z, targetZ, 0.05);
   });
 }
+
 
 // Pulisci le risorse quando necessario
 export function cleanupWorld() {
@@ -180,6 +181,7 @@ export function cleanupWorld() {
   flowerMeshes.length = 0;
   treeMeshes.length = 0;
   rockMeshes.length = 0;
+  columnMeshes.length = 0;
   groundMesh = null;
   physicsWorld.cleanup();
 }

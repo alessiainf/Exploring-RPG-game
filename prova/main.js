@@ -15,6 +15,8 @@ import {
   updateNecklace,
 } from './Statuegame.js';
 import { initWeather, updateWeather } from './Weather.js';
+import { loadBook, updateBookInteraction } from './StartGame.js';
+import { updateBookEffect } from './StartGame.js';
 
 
 // === SCENA, CAMERA, RENDERER ===
@@ -44,6 +46,9 @@ await loadStatues(scene);
 await loadWizard(scene);
 await loadNecklace(scene);
 await loadHintObject(scene);
+await loadBook(scene);
+
+
 
 
 // === INIZIALIZZAZIONE ===
@@ -139,7 +144,7 @@ window.addEventListener('keydown', (event) => {
 
 
 // === ANIMATE LOOP ===
-function animate() {
+function animate(time) {
     requestAnimationFrame(animate);
 
     const delta = clock.getDelta();
@@ -176,6 +181,10 @@ function animate() {
     updateNecklace(delta);
     updateInteraction(characterController.getPlayerPosition(), scene);
     updateWeather(characterController.getPlayerPosition());
+    updateBookInteraction(characterController.getPlayerPosition());
+
+updateBookEffect(time * 0.001);  // tempo in secondi
+
 
 
     renderer.render(scene, camera);

@@ -14,8 +14,8 @@ export class ThirdPersonCamera {
     this.heightOffset = 2;
     
     // Angoli di rotazione
-    this.horizontalAngle = Math.PI;
-    this.verticalAngle = 0.3;
+    this.horizontalAngle = -Math.PI/2;
+    this.verticalAngle = 0.1;
     this.minVerticalAngle = -Math.PI / 3;
     this.maxVerticalAngle = Math.PI / 3;
     

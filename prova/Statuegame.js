@@ -28,9 +28,9 @@ export async function loadStatues(scene) {
   ];
 
   const positions = [
-    new THREE.Vector3(17, 1, -43),
-    new THREE.Vector3(20, 2.45, -43),
-    new THREE.Vector3(23, 1.9, -43),
+    new THREE.Vector3(14, 1, -43),
+    new THREE.Vector3(17, 2.45, -43),
+    new THREE.Vector3(20, 1.9, -43),
   ];
 
   for (let i = 0; i < paths.length; i++) {
@@ -123,7 +123,7 @@ export async function loadHintObject(scene) {
   const gltf = await loader.loadAsync('assets/models/instr_rock.glb');  
   hintObject = gltf.scene;
 
-  hintObject.position.set(14, -0.3, -43); 
+  hintObject.position.set(11, -0.3, -43); 
   hintObject.scale.set(1.5, 1.5, 1.5);
 
   scene.add(hintObject);
@@ -314,8 +314,7 @@ if (checkStatueOrientations() && !thankedPlayer) {
 }
 
 function checkStatueOrientations() {
-  // Orientamenti target in radianti: Est = 0, Sud = -π/2, Ovest = π o -π
-  const toleratedError = 0.2;  // errore ammesso in radianti
+  const toleratedError = 0.2;  //errore ammesso in radianti
 
   // Est
   const statue1Correct = Math.abs(THREE.MathUtils.euclideanModulo(statues[0].rotation.y, 2 * Math.PI) - 0) < toleratedError;
@@ -323,7 +322,7 @@ function checkStatueOrientations() {
   // Sud
   const statue2Correct = Math.abs(THREE.MathUtils.euclideanModulo(statues[1].rotation.y, 2 * Math.PI) - (3 * Math.PI / 2)) < toleratedError;
 
-  // Ovest (±π o -π)
+  // Ovest (-π)
   const statue3Angle = THREE.MathUtils.euclideanModulo(statues[2].rotation.y, 2 * Math.PI);
   const statue3Correct = Math.abs(statue3Angle - Math.PI) < toleratedError;
 
