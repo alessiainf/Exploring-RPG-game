@@ -1,7 +1,9 @@
 // StartGame.js
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
-import { keys } from './Statuegame.js';
+import { keys } from './InputManager.js';
+import { promptState } from './main.js';
+
 
 
 let book = null;
@@ -58,12 +60,11 @@ function createSmokeParticle(scene) {
 }
 
 export function updateBookInteraction(playerPosition) {
-  const prompt = document.getElementById('interactionPrompt');
   const dialogueBox = document.getElementById('dialogueBox');
 
-  if (!bookMesh || !prompt || !dialogueBox) return;
+  if (!bookMesh || !dialogueBox) return;
 
-   // Do no interfere if dialogue box is already open
+  // Non interferire se il dialogo è aperto e non riguarda il libro
   if (dialogueBox.style.display === 'block' && !dialogueBox.textContent.includes('ISTRUZIONI')) {
     return;
   }
@@ -72,37 +73,32 @@ export function updateBookInteraction(playerPosition) {
   const isNear = distance < 2;
 
   if (isNear) {
-    prompt.style.display = 'block';
-    prompt.textContent = '📖 Premi F per leggere le istruzioni';
+    promptState.active = true;
+    promptState.text = '📖 Premi F per leggere le istruzioni';
 
     if (keys.fPressed) {
       keys.fPressed = false;
 
       if (dialogueBox.style.display === 'none' || dialogueBox.style.display === '') {
-        // Mostra box
+        // Mostra istruzioni
         dialogueBox.innerHTML = `
           🧾 <b>ISTRUZIONI:</b><br>
            "Chiunque voglia fuggire da queste Terre Velate, dovrà risvegliare l’antico Portale.
-          Per farlo, non bastano la forza o l’ingegno, ma servono tre Doni perduti nel tempo:\n
-          🔮 <b>La Collana del Vento</b>, custodita da un mago che attende il risveglio dei Guardiani di Pietra.
-          🍯 <b>Il Miele Dorato</b>, gelosamente tenuto da un’Ape capricciosa, che non si lascia convincere con facilità.
+          Per farlo, non bastano la forza o l’ingegno, ma servono tre Doni perduti nel tempo:<br>
+          🔮 <b>La Collana del Vento</b>, custodita da un mago che attende il risveglio dei Guardiani di Pietra.<br>
+          🍯 <b>Il Miele Dorato</b>, gelosamente tenuto da un’Ape capricciosa, che non si lascia convincere con facilità.<br>
           🐙 <b>Il Tentacolo d'Ombra</b>, strappato all'abisso di ciò che è stato.<br>
           Quando i tre Doni saranno tuoi, il Portale si aprirà... e il cammino verso la libertà sarà finalmente tracciato."<br><br>
         `;
         dialogueBox.style.display = 'block';
-        prompt.style.display = 'none';
       } else {
-        // Nascondi box
+        // Nascondi istruzioni
         dialogueBox.style.display = 'none';
-        prompt.style.display = 'block';  
       }
     }
   } else {
-    if (prompt.textContent.includes('📖')) {
-      prompt.style.display = 'none';
-    }
     if (dialogueBox.style.display === 'block') {
-      dialogueBox.style.display = 'none';  
+      dialogueBox.style.display = 'none';
     }
   }
 }

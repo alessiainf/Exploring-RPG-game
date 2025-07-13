@@ -150,10 +150,15 @@ export class CharacterController {
             //i will control the forces
             const rigidBodyDesc = RAPIER.RigidBodyDesc.kinematicPositionBased();
             
+            //start game
+            //const startPosition = { x: -15, y: totalHeight*0.47, z: -5 };
+
             //statue
             //const startPosition = { x: 18, y: totalHeight*0.47, z: -30 };
-            //start game
-            const startPosition = { x: -15, y: totalHeight*0.47, z: -5 };
+
+            //mushrooms
+            const startPosition = { x: 70, y: totalHeight*0.47, z: -25};
+            
             rigidBodyDesc.setTranslation(startPosition.x, startPosition.y, startPosition.z);
 
             rigidBodyDesc.lockRotations(true, false, true);

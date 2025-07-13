@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
-import { loadWorld, grassMeshes, groundMesh, updateGrass, updateFlower } from './environment.js';
+import { loadWorld, updateGrass, updateFlower } from './environment.js';
 import { CharacterController } from './characterController.js';
 import { setupLights } from './lighting.js';
 import { physicsWorld, visualizeColliders } from './physics.js';
@@ -17,7 +17,7 @@ import {
 import { initWeather, updateWeather } from './Weather.js';
 import { loadBook, updateBookInteraction } from './StartGame.js';
 import { updateBookEffect } from './StartGame.js';
-
+import { loadMushrooms, loadTentacle, updateMushroomInteraction, updateTentacleInteraction} from './MushroomRiddle.js';
 
 // === SCENA, CAMERA, RENDERER ===
 const scene = new THREE.Scene();
@@ -47,6 +47,15 @@ await loadWizard(scene);
 await loadNecklace(scene);
 await loadHintObject(scene);
 await loadBook(scene);
+
+//mushroom riddle
+await loadMushrooms(scene);
+await loadTentacle(scene);
+
+export const promptState = {
+  active: false,
+  text: '',
+};
 
 
 
@@ -182,9 +191,22 @@ function animate(time) {
     updateInteraction(characterController.getPlayerPosition(), scene);
     updateWeather(characterController.getPlayerPosition());
     updateBookInteraction(characterController.getPlayerPosition());
+    updateBookEffect(time * 0.001);  // tempo in secondi
 
-updateBookEffect(time * 0.001);  // tempo in secondi
+    // mushroom riddle
+    updateMushroomInteraction(characterController.getPlayerPosition());
+    updateTentacleInteraction(characterController.getPlayerPosition());
 
+    const prompt = document.getElementById('interactionPrompt');
+    if (promptState.active) {
+    prompt.style.display = 'block';
+    prompt.textContent = promptState.text;
+    } else {
+    prompt.style.display = 'none';
+    }
+    // Reset per il prossimo frame
+    promptState.active = false;
+    promptState.text = '';
 
 
     renderer.render(scene, camera);

@@ -2,6 +2,8 @@ import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import * as THREE from 'three';
 import { physicsWorld } from './physics.js';
 import { collectItem } from './GameState.js';
+import { keys } from './InputManager.js';
+import { promptState } from './main.js';
 
 const statues = [];
 let wizard = null;
@@ -9,6 +11,7 @@ let chestBone = null;
 let necklace = null;
 let nearWizard = false;
 let dialogueStep = 0;
+
 
 
 export { statues, wizard, necklace };
@@ -206,22 +209,22 @@ export function updateInteraction(playerPosition, scene) {
       showingNecklacePrompt = true;
 
       if (necklaceUnlocked) {
-        prompt.style.display = 'block';
-        prompt.textContent = '✨ Premi F per raccogliere la collana';
+        promptState.active = true;
+        promptState.text = '✨ Premi F per raccogliere la collana';
 
         if (keys.fPressed) {
           keys.fPressed = false;
           scene.remove(necklace);
           necklaceCollected = true;
           dialogueBox.style.display = 'none';
-          prompt.style.display = 'none';
           collectItem();
         }
       } else {
-        prompt.style.display = 'block';
-        prompt.textContent = '🔒 Qualcosa ti impedisce di prenderla...';
+        promptState.active = true;
+        promptState.text = '🔒 Qualcosa ti impedisce di prenderla...';
       }
     }
+
 
   // === Statue ===
   statues.forEach(statue => {
@@ -289,27 +292,19 @@ if (checkStatueOrientations() && !thankedPlayer) {
 
 
   // Mostra "Premi F" se vicino a una statua o al mago e non stai parlando
-  if (prompt) {
-    const dialogueVisible = dialogueBox && dialogueBox.style.display !== 'none';
+const dialogueVisible = dialogueBox && dialogueBox.style.display !== 'none';
 
-    // Se c'è una interazione con la collana, mostra quel prompt e non sovrascrivere
-    if (showingNecklacePrompt) {
-      return;
-    }
+// Se già mostrato un messaggio per la collana, non fare nulla
+if (showingNecklacePrompt) return;
 
-    // Altrimenti, mostra "Premi F" solo se non c'è una box aperta
-    const shouldShowPrompt = nearAnyStatue || nearHint || nearWizard;
+// Altrimenti, mostra "Premi F" se sei vicino a statue, hint o mago e non stai parlando
+const shouldShowPrompt = nearAnyStatue || nearHint || nearWizard;
 
-    if (!dialogueVisible && shouldShowPrompt) {
-      prompt.style.display = 'block';
-      prompt.textContent = 'Premi F';
-    } else {
-      prompt.style.display = 'none';
-    }
-  }
-  else if (prompt && necklaceCollected) {
-    prompt.style.display = 'none';
-  }
+if (!dialogueVisible && shouldShowPrompt) {
+  promptState.active = true;
+  promptState.text = 'Premi F';
+}
+
 
 }
 
@@ -332,10 +327,5 @@ function checkStatueOrientations() {
 
 
 
-export const keys = { fPressed: false };
 export { hintObject, checkStatueOrientations };
 
-
-window.addEventListener('keydown', e => {
-  if (e.code === 'KeyF') keys.fPressed = true;
-});

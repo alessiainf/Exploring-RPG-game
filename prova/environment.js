@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { physicsWorld } from './physics.js';
 import { statues, wizard} from './Statuegame.js';
+import { mushrooms} from './MushroomRiddle.js';
 
 export const grassMeshes = [];
 export const flowerMeshes = [];
@@ -117,6 +118,11 @@ function setupWorldPhysics() {
   // Aggiungi collider per il mago (se già caricato)
   if (wizard) {
     physicsWorld.addWizardCollider(wizard);
+  }
+
+    // Aggiungi collider per il fungo
+  if (mushrooms.length > 0) {
+    physicsWorld.addMushroomCollider(mushrooms[0]);
   }
 
 }
