@@ -5,10 +5,14 @@ import { collectItem } from './GameState.js';
 import { keys } from './InputManager.js';
 import { promptState } from './main.js';
 
+
+let dialogueStep = 0;
+let inDialogue = false;
 const mushrooms = [];
 let tentacle = null;
 const answered = [false, false, false];  // uno per ogni riddle
 export {mushrooms}
+
 
 const riddles = [
   {
@@ -38,12 +42,23 @@ export async function loadMushrooms(scene) {
   }
 
   const loader = new GLTFLoader();
-  const gltf = await loader.loadAsync('assets/models/Mushrooms In A Trenc.glb');
+  const gltf = await loader.loadAsync('assets/models/Mushrooms In A Trenc_an.glb');
   const mushroomGroup = gltf.scene;
 
-  mushroomGroup.position.set(74, 1.8, -26);
+    // Stampa informazioni per verificare se è riggato
+  mushroomGroup.traverse(child => {
+    if (child.isSkinnedMesh) {
+      console.log('SkinnedMesh trovato:', child.name);
+      console.log('Skeleton:', child.skeleton);
+    }
+    if (child.isBone) {
+      console.log('Bone trovato:', child.name);
+    }
+  });
+
+  mushroomGroup.position.set(74, -0.1, -26);
   mushroomGroup.rotation.set(0, -Math.PI / 2, 0);
-  mushroomGroup.scale.set(1.5, 1.5, 1.5);
+  mushroomGroup.scale.set(0.02, 0.02, 0.02);
   scene.add(mushroomGroup);
 
   mushroomGroup.traverse(child => {
@@ -85,10 +100,6 @@ function setupMushroomPhysics(mushroomGroup) {
 
 export function updateMushroomInteraction(playerPosition) {
   const dialogueBox = document.getElementById('dialogueBox');
-  if (dialogueBox && dialogueBox.style.display === 'block' && dialogueBox.textContent.trim() === '') {
-    dialogueBox.style.display = 'none';
-  }
-//dialogueBox.textContent = ''
   const mush = mushrooms[0];
   const dist = mush.position.distanceTo(playerPosition);
   const allAnswered = answered.every(val => val);
@@ -97,32 +108,110 @@ export function updateMushroomInteraction(playerPosition) {
     if (keys.fPressed) {
       keys.fPressed = false;
 
+      if (inDialogue) {
+        dialogueStep++;
+        showDialogueLine();
+        return;
+      }
+
       if (dialogueBox.style.display !== 'none') {
-        const next = answered.findIndex(val => !val);
-        if (next !== -1) {
-          showRiddleUI(next);
-        } else {
-          dialogueBox.style.display = 'none';
-        }
+        dialogueBox.style.display = 'none';
+        return;
+      }
+
+      if (allAnswered) {
+        showFinalDialogue();
       } else {
-        if (!allAnswered) {
-          const next = answered.findIndex(val => !val);
-          showRiddleUI(next);
-        } else {
-          promptState.active = true;
-          promptState.text = '🐙 Tutti gli indovinelli risolti! Vai al tentacolo.';
-        }
+        startDialogueSequence();
       }
     }
+
 
     if (dialogueBox.style.display === 'none') {
       promptState.active = true;
       promptState.text = allAnswered
-        ? '🐙 Tutti gli indovinelli risolti! Vai al tentacolo.'
-        : '🍄 Premi F per parlare con il fungo';
+        ? '🍄 Premi F per parlare con il Fungone'
+        : '🍄 Premi F per parlare con le strane teste fungo';
     }
   }
 }
+
+function startDialogueSequence() {
+  inDialogue = true;
+  dialogueStep = 0;
+  showDialogueLine(); // mostra la prima battuta
+}
+function showDialogueLine() {
+  const dialogueBox = document.getElementById('dialogueBox');
+  dialogueBox.style.display = 'block';
+  dialogueBox.innerHTML = '';
+
+  let text = '';
+switch (dialogueStep) {
+  case 0:
+    text = '🧝‍♀️ Avventuriero: ...Siete tre funghi impilati sotto un trench?!';
+    break;
+  case 1:
+    text = '🍄???: SILENZIO! Noi siamo... IL FUNGONE!';
+    break;
+  case 2:
+    text = '🍄Fungo in alto (Simon): Trattiamo oggetti rari, proibiti, dimenticati...';
+    break;
+  case 3:
+    text = '🍄 Fungo in basso (Britney): ...tipo tentacoli, denti di drago, fiale di tempo solido...';
+    break;
+  case 4:
+    text = '🍄 Fungo in mezzo (Braum): Britney! Smettila di rivelare a tutti i nostri segreti!';
+    break;
+  case 5:
+    text = '🧝‍♀️ Avventuriero: Be io avrei proprio bisogno di un tentacolo.';
+    break;
+  case 6:
+    text = '🍄 Fungo in mezzo (Braum): Non è in vendita. Ma potresti... meritarlo.';
+    break;
+  case 7:
+    text = '🍄 Fungo in alto (Simon): Tre indovinelli. Se li risolvi, il tentacolo sarà tuo.';
+    break;
+  case 8:
+    text = '🍄 Fungo in basso (Britney): Se bari... ti vendiamo al mercato degli gnomi ciechi.';
+    break;
+  case 9:
+    text = '🍄 Fungo in alto (Simon): Accetti la sfida?';
+      // Mostra i bottoni qui sotto solo in questo caso
+      const btnYes = document.createElement('button');
+      btnYes.textContent = 'SÌ';
+      btnYes.style.margin = '5px';
+      btnYes.onclick = () => {
+        dialogueBox.style.display = 'none';
+        inDialogue = false;
+        const next = answered.findIndex(val => !val);
+        showRiddleUI(next);
+      };
+
+      const btnNo = document.createElement('button');
+      btnNo.textContent = 'NO';
+      btnNo.style.margin = '5px';
+      btnNo.onclick = () => {
+        dialogueBox.style.display = 'none';
+        inDialogue = false;
+      };
+
+      dialogueBox.appendChild(document.createElement('p')).textContent = text;
+      dialogueBox.appendChild(btnYes);
+      dialogueBox.appendChild(btnNo);
+      return; // fermati qui, altrimenti fa il default
+    default:
+      text = '🍄 Fungo: ...';
+      inDialogue = false;
+      dialogueBox.style.display = 'none';
+      return;
+  }
+
+  const p = document.createElement('p');
+  p.textContent = text;
+  dialogueBox.appendChild(p);
+}
+
 
 
 
@@ -152,11 +241,8 @@ export function updateTentacleInteraction(playerPosition) {
 function showRiddleUI(index) {
   const riddle = riddles[index];
   const dialogueBox = document.getElementById('dialogueBox');
-
-  // === PULIZIA COMPLETA del contenuto del dialogo precedente ===
   dialogueBox.innerHTML = '';
 
-  // === CREA ELEMENTI per domanda e risposte ===
   const questionEl = document.createElement('p');
   questionEl.id = 'riddleQuestion';
   questionEl.textContent = riddle.question;
@@ -168,18 +254,25 @@ function showRiddleUI(index) {
   dialogueBox.appendChild(questionEl);
   dialogueBox.appendChild(optionsEl);
 
-  // === CREA BOTTONI DELLE RISPOSTE ===
   riddle.options.forEach(option => {
     const btn = document.createElement('button');
     btn.textContent = option;
     btn.style.margin = '5px';
-    btn.style.padding = '6px 12px';
-    btn.style.cursor = 'pointer';
-
     btn.onclick = () => {
       if (option.toLowerCase() === riddle.answer.toLowerCase()) {
         questionEl.textContent = "✅ Risposta corretta!";
         answered[index] = true;
+
+        setTimeout(() => {
+          dialogueBox.style.display = 'none';
+
+          const next = answered.findIndex(val => !val);
+          if (next !== -1) {
+            showRiddleUI(next);
+          } else {
+            showFinalDialogue();  // tutti risolti
+          }
+        }, 1000);
       } else {
         questionEl.textContent = "❌ Risposta sbagliata. Riprova!";
       }
@@ -192,3 +285,21 @@ function showRiddleUI(index) {
 }
 
 
+
+function showFinalDialogue() {
+  const dialogueBox = document.getElementById('dialogueBox');
+  dialogueBox.innerHTML = '';
+
+  const lines = [
+    "🍄 Fungo in alto (Simon): Incredibile... li hai risolti tutti.",
+    "Beh, hai vinto. Il tentacolo è tuo. Prendilo, se hai il coraggio..."
+  ];
+
+  lines.forEach(line => {
+    const p = document.createElement('p');
+    p.textContent = line;
+    dialogueBox.appendChild(p);
+  });
+
+  dialogueBox.style.display = 'block';
+}

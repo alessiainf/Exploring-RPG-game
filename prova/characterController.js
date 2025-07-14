@@ -33,7 +33,7 @@ export class CharacterController {
 
         // Visualizzazione debug
         this.debugWireframe = null;
-        this.showWireframe = true;
+        this.showWireframe = false;
 
         // Sincronizzazione fisica
         this.physicsPosition = new THREE.Vector3();

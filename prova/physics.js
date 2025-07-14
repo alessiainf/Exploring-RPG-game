@@ -312,16 +312,16 @@ addMushroomCollider(mushroomGroup) {
     const size = bbox.getSize(new THREE.Vector3());
 
     // Definisce un collider a base cilindrica come tronco fungo
-    const radius = Math.max(size.x, size.z) * 0.2;
-    const height = size.y * 0.5;
+    const radius = Math.max(size.x, size.z) *10;
+    const height = size.y * 20;
 
     const colliderDesc = RAPIER.ColliderDesc.cylinder(height * 0.7, radius);
 
     const position = mushroomGroup.getWorldPosition(new THREE.Vector3());
     colliderDesc.setTranslation(
-      position.x+1.4,
-      position.y-0.5,  // sollevato un po' da terra
-      position.z+0.2
+      position.x,
+      position.y+2,  // sollevato un po' da terra
+      position.z
     );
 
     const collider = this.world.createCollider(colliderDesc);
@@ -334,6 +334,7 @@ addMushroomCollider(mushroomGroup) {
     console.error('Error adding mushroom collider:', error);
     return null;
   }
+  
 }
 
 
