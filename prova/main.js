@@ -17,7 +17,16 @@ import {
 import { initWeather, updateWeather } from './Weather.js';
 import { loadBook, updateBookInteraction } from './StartGame.js';
 import { updateBookEffect } from './StartGame.js';
-import { loadMushrooms, loadTentacle, updateMushroomInteraction, updateTentacleInteraction} from './MushroomRiddle.js';
+import { loadMushrooms, 
+    loadTentacle, 
+    updateMushroomInteraction, 
+    updateTentacleInteraction,
+animateTalkingHead,
+currentTalkingBone,
+boneSimon,
+animateArms,
+boneBritney,
+animateBritney} from './MushroomRiddle.js';
 
 // === SCENA, CAMERA, RENDERER ===
 const scene = new THREE.Scene();
@@ -196,6 +205,13 @@ function animate(time) {
     // mushroom riddle
     updateMushroomInteraction(characterController.getPlayerPosition());
     updateTentacleInteraction(characterController.getPlayerPosition());
+    
+        animateTalkingHead(boneSimon, performance.now() / 1000);
+    
+    
+    animateBritney(performance.now());
+    
+    animateArms(time);
 
     const prompt = document.getElementById('interactionPrompt');
     if (promptState.active) {

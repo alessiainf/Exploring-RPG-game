@@ -123,11 +123,11 @@ let hintVisible = false;
 
 export async function loadHintObject(scene) {
   const loader = new GLTFLoader();
-  const gltf = await loader.loadAsync('assets/models/instr_rock.glb');  
+  const gltf = await loader.loadAsync('assets/models/shrine.glb');  
   hintObject = gltf.scene;
 
   hintObject.position.set(11, -0.3, -43); 
-  hintObject.scale.set(1.5, 1.5, 1.5);
+  hintObject.scale.set(1.2, 1.2, 1.2);
 
   scene.add(hintObject);
 

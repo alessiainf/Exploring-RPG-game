@@ -13,6 +13,15 @@ let tentacle = null;
 const answered = [false, false, false];  // uno per ogni riddle
 export {mushrooms}
 
+let mushroomRoot = null;
+export { mushroomRoot };
+
+
+//animation
+let boneSimon = null;
+let boneL_Arm = null;
+let boneR_Arm = null;
+
 
 const riddles = [
   {
@@ -58,17 +67,126 @@ export async function loadMushrooms(scene) {
 
   mushroomGroup.position.set(74, -0.1, -26);
   mushroomGroup.rotation.set(0, -Math.PI / 2, 0);
-  mushroomGroup.scale.set(0.02, 0.02, 0.02);
+  mushroomGroup.scale.set(0.015, 0.015, 0.015);
   scene.add(mushroomGroup);
+  mushroomRoot = mushroomGroup;
+
 
   mushroomGroup.traverse(child => {
     child.castShadow = true;
     child.receiveShadow = true;
   });
 
+  mushroomGroup.traverse(child => {
+  if (child.isBone) {
+    if (child.name === 'CC_Base_Head') boneSimon = child;
+    if (child.name === 'CC_Base_L_Upperarm') boneL_Arm = child;
+    if (child.name === 'CC_Base_R_Upperarm') boneR_Arm = child;
+    if (child.name === 'CC_Base_Spine01') boneBritney = child;
+  }
+});
+
+
   mushrooms.push(mushroomGroup); 
   setupMushroomPhysics(mushroomGroup);
 }
+
+
+//mushroom animation
+let currentTalkingBone = null;
+let armsActive = false;
+let boneBritney = null;
+export{currentTalkingBone, boneSimon, boneL_Arm, boneR_Arm, armsActive, boneBritney};
+let isTalkingSimon = false;
+let isTalkingBritney = false;
+
+export { isTalkingSimon, isTalkingBritney };
+
+//head aniamtion (simon)
+export function animateTalkingHead(bone, time) {
+  if (!bone) return;
+
+  // Respiro (sempre attivo)
+  const breathAmplitude = 0.04;
+  const breathFrequency = 0.2;
+  const breathOffset = Math.sin(time * breathFrequency * Math.PI * 2) * breathAmplitude;
+  bone.rotation.x = breathOffset;
+
+  // Movimento laterale solo se sta parlando
+  if (isTalkingSimon) {
+    const talkAngle = Math.sin(time * 10) * 0.05;
+    bone.rotation.y = talkAngle;
+  } else {
+    bone.rotation.y = 0; // neutro
+  }
+}
+
+
+
+//arms animation (braum)
+export function animateArms(timeMs) {
+  if (!boneL_Arm || !boneR_Arm) return;
+
+  const time = timeMs / 1000;
+
+  // Movimento di respirazione (sempre attivo)
+  const breathAmplitude = 0.09;
+  const breathFrequency = 0.2;
+  const breathOffset = Math.sin(time * breathFrequency * Math.PI * 2) * breathAmplitude;
+
+  // Movimento attivo (gesticolazione)
+  const gestureAmplitude = 0.2;
+  const gestureFrequency = 1.5;
+  const gestureOffset = Math.sin(time * gestureFrequency * Math.PI * 2) * gestureAmplitude;
+
+  // Se sta parlando con braccia attive → gesticolazione + respiro
+  if (armsActive) {
+    boneL_Arm.rotation.x = gestureOffset - 0.4 + breathOffset;
+    boneR_Arm.rotation.x = -gestureOffset - 0.4 + breathOffset;
+  } else {
+    // Solo respirazione
+    boneL_Arm.rotation.x = -0.4 + breathOffset;
+    boneR_Arm.rotation.x = -0.4 + breathOffset;
+  }
+}
+
+
+//leg animation (britney)
+export function animateBritney(timeMs) {
+  if (!boneBritney) return;
+
+  const time = timeMs / 1000;
+
+  // Respiro (sempre attivo)
+  const breathAmplitude = 0.02;
+  const breathFrequency = 0.25;
+  const breath = Math.sin(time * breathFrequency * Math.PI * 2) * breathAmplitude;
+
+  // Oscillazione solo se sta parlando
+  let swing = 0;
+  if (isTalkingBritney) {
+    const swingAmplitude = 0.04;
+    const swingFrequency = 1;
+    swing = Math.sin(time * swingFrequency * Math.PI * 2) * swingAmplitude;
+  }
+
+  boneBritney.rotation.x = swing + breath;
+}
+
+
+export function updateMushroomLogic(time) {
+  // Aggiorna i flag
+  isTalkingSimon = (currentTalkingBone === boneSimon);
+  isTalkingBritney = (currentTalkingBone === boneBritney);
+
+  // Anima braccia (sempre)
+  animateArms(time);
+
+  // Anima Simon e Britney
+  animateTalkingHead(boneSimon, time / 1000);
+  animateBritney(time);
+}
+
 
 
 
@@ -146,41 +264,67 @@ function showDialogueLine() {
   dialogueBox.style.display = 'block';
   dialogueBox.innerHTML = '';
 
+  // Reset default
+  currentTalkingBone = null;
+  isTalkingSimon = false;
+  isTalkingBritney = false;
+
   let text = '';
-switch (dialogueStep) {
-  case 0:
-    text = '🧝‍♀️ Avventuriero: ...Siete tre funghi impilati sotto un trench?!';
-    break;
-  case 1:
-    text = '🍄???: SILENZIO! Noi siamo... IL FUNGONE!';
-    break;
-  case 2:
-    text = '🍄Fungo in alto (Simon): Trattiamo oggetti rari, proibiti, dimenticati...';
-    break;
-  case 3:
-    text = '🍄 Fungo in basso (Britney): ...tipo tentacoli, denti di drago, fiale di tempo solido...';
-    break;
-  case 4:
-    text = '🍄 Fungo in mezzo (Braum): Britney! Smettila di rivelare a tutti i nostri segreti!';
-    break;
-  case 5:
-    text = '🧝‍♀️ Avventuriero: Be io avrei proprio bisogno di un tentacolo.';
-    break;
-  case 6:
-    text = '🍄 Fungo in mezzo (Braum): Non è in vendita. Ma potresti... meritarlo.';
-    break;
-  case 7:
-    text = '🍄 Fungo in alto (Simon): Tre indovinelli. Se li risolvi, il tentacolo sarà tuo.';
-    break;
-  case 8:
-    text = '🍄 Fungo in basso (Britney): Se bari... ti vendiamo al mercato degli gnomi ciechi.';
-    break;
-  case 9:
-    text = '🍄 Fungo in alto (Simon): Accetti la sfida?';
+
+  switch (dialogueStep) {
+    case 0:
+      text = '🧝‍♀️ Avventuriero: ...Siete tre funghi impilati sotto un trench?!';
+      break;
+    case 1:
+      text = '🍄???: SILENZIO! Noi siamo... IL FUNGONE!';
+      currentTalkingBone = boneSimon;
+      isTalkingSimon = true;
+      isTalkingBritney = true;
+      armsActive = true;
+      break;
+    case 2:
+      text = '🍄Fungo in alto (Simon): Trattiamo oggetti rari, proibiti, dimenticati...';
+      currentTalkingBone = boneSimon;
+      isTalkingSimon = true;
+      armsActive = false;
+      break;
+    case 3:
+      text = '🍄 Fungo in basso (Britney): ...tipo tentacoli, denti di drago, fiale di tempo solido...';
+      currentTalkingBone = boneBritney;
+      isTalkingBritney = true;
+      break;
+    case 4:
+      text = '🍄 Fungo in mezzo (Braum): Britney! Smettila di rivelare a tutti i nostri segreti!';
+      armsActive = true;
+      break;
+    case 5:
+      text = '🧝‍♀️ Avventuriero: Be io avrei proprio bisogno di un tentacolo.';
+      armsActive = false;
+      break;
+    case 6:
+      text = '🍄 Fungo in mezzo (Braum): Non è in vendita. Ma potresti... meritarlo.';
+      armsActive = true;
+      break;
+    case 7:
+      text = '🍄 Fungo in alto (Simon): Tre indovinelli. Se li risolvi, il tentacolo sarà tuo.';
+      currentTalkingBone = boneSimon;
+      isTalkingSimon = true;
+      armsActive = false;
+      break;
+    case 8:
+      text = '🍄 Fungo in basso (Britney): Se bari... ti vendiamo al mercato degli gnomi ciechi.';
+      currentTalkingBone = boneBritney;
+      isTalkingBritney = true;
+      break;
+    case 9:
+      text = '🍄 Fungo in alto (Simon): Accetti la sfida?';
+      currentTalkingBone = boneSimon;
+      isTalkingSimon = true;
       // Mostra i bottoni qui sotto solo in questo caso
       const btnYes = document.createElement('button');
+      btnYes.classList.add('dialogue-button');
       btnYes.textContent = 'SÌ';
-      btnYes.style.margin = '5px';
+      //btnYes.style.margin = '5px';
       btnYes.onclick = () => {
         dialogueBox.style.display = 'none';
         inDialogue = false;
@@ -189,11 +333,14 @@ switch (dialogueStep) {
       };
 
       const btnNo = document.createElement('button');
+      btnNo.classList.add('dialogue-button');
       btnNo.textContent = 'NO';
-      btnNo.style.margin = '5px';
+      //btnNo.style.margin = '5px';
       btnNo.onclick = () => {
         dialogueBox.style.display = 'none';
         inDialogue = false;
+        isTalkingSimon = false;
+        isTalkingBritney = false;
       };
 
       dialogueBox.appendChild(document.createElement('p')).textContent = text;
@@ -245,6 +392,7 @@ function showRiddleUI(index) {
 
   const questionEl = document.createElement('p');
   questionEl.id = 'riddleQuestion';
+  isTalkingSimon = true;
   questionEl.textContent = riddle.question;
 
   const optionsEl = document.createElement('div');
@@ -258,9 +406,14 @@ function showRiddleUI(index) {
     const btn = document.createElement('button');
     btn.textContent = option;
     btn.style.margin = '5px';
+    btn.classList.add('dialogue-button');
     btn.onclick = () => {
       if (option.toLowerCase() === riddle.answer.toLowerCase()) {
+        btn.classList.add('dialogue-button');
+
         questionEl.textContent = "✅ Risposta corretta!";
+        isTalkingSimon = false;
+        isTalkingBritney = false;
         answered[index] = true;
 
         setTimeout(() => {
@@ -274,7 +427,11 @@ function showRiddleUI(index) {
           }
         }, 1000);
       } else {
+        btn.classList.add('dialogue-button');
+
         questionEl.textContent = "❌ Risposta sbagliata. Riprova!";
+        isTalkingSimon = false;
+        isTalkingBritney = false;
       }
     };
     optionsEl.appendChild(btn);
@@ -287,12 +444,12 @@ function showRiddleUI(index) {
 
 
 function showFinalDialogue() {
+  isTalkingSimon = false;
   const dialogueBox = document.getElementById('dialogueBox');
   dialogueBox.innerHTML = '';
 
   const lines = [
-    "🍄 Fungo in alto (Simon): Incredibile... li hai risolti tutti.",
-    "Beh, hai vinto. Il tentacolo è tuo. Prendilo, se hai il coraggio..."
+    "🍄 Fungo in alto (Simon): Incredibile... li hai risolti tutti. Beh, hai vinto. Il tentacolo è tuo. Prendilo, se hai il coraggio..."
   ];
 
   lines.forEach(line => {

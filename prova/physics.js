@@ -312,8 +312,8 @@ addMushroomCollider(mushroomGroup) {
     const size = bbox.getSize(new THREE.Vector3());
 
     // Definisce un collider a base cilindrica come tronco fungo
-    const radius = Math.max(size.x, size.z) *10;
-    const height = size.y * 20;
+    const radius = Math.max(size.x, size.z) *16;
+    const height = size.y * 30;
 
     const colliderDesc = RAPIER.ColliderDesc.cylinder(height * 0.7, radius);
 
@@ -321,7 +321,7 @@ addMushroomCollider(mushroomGroup) {
     colliderDesc.setTranslation(
       position.x,
       position.y+2,  // sollevato un po' da terra
-      position.z
+      position.z-0.2
     );
 
     const collider = this.world.createCollider(colliderDesc);
