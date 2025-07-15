@@ -65,8 +65,8 @@ export async function loadMushrooms(scene) {
     }
   });
 
-  mushroomGroup.position.set(74, -0.1, -26);
-  mushroomGroup.rotation.set(0, -Math.PI / 2, 0);
+  mushroomGroup.position.set(63, -0.1, -21);
+  mushroomGroup.rotation.set(0, 0, 0);
   mushroomGroup.scale.set(0.015, 0.015, 0.015);
   scene.add(mushroomGroup);
   mushroomRoot = mushroomGroup;
@@ -194,9 +194,9 @@ export async function loadTentacle(scene) {
   const loader = new GLTFLoader();
   const gltf = await loader.loadAsync('assets/models/Tentacle.glb');
   tentacle = gltf.scene;
-  tentacle.position.set(76, 1, -24);
+  tentacle.position.set(65, 1, -24);
   tentacle.rotation.set(0, -Math.PI, -Math.PI / 2);
-  tentacle.scale.set(2, 2, 2);
+  tentacle.scale.set(1.5, 1.5, 1.5);
   scene.add(tentacle);
 
   tentacle.traverse(child => {
@@ -302,7 +302,7 @@ function showDialogueLine() {
       armsActive = false;
       break;
     case 6:
-      text = '🍄 Fungo in mezzo (Braum): Non è in vendita. Ma potresti... meritarlo.';
+      text = '🍄 Fungo in mezzo (Braum): Non è in vendita. Ma potresti... meritarlo. Se il tuo cervello è ancora intatto.';
       armsActive = true;
       break;
     case 7:
@@ -384,6 +384,14 @@ export function updateTentacleInteraction(playerPosition) {
   }
 }
 
+export function animateTentacle(time) {
+  if (!tentacle) return;
+
+  // Rotazione continua sul proprio asse
+  tentacle.rotation.y += 0.01;
+}
+
+
 
 function showRiddleUI(index) {
   const riddle = riddles[index];
@@ -449,7 +457,7 @@ function showFinalDialogue() {
   dialogueBox.innerHTML = '';
 
   const lines = [
-    "🍄 Fungo in alto (Simon): Incredibile... li hai risolti tutti. Beh, hai vinto. Il tentacolo è tuo. Prendilo, se hai il coraggio..."
+    "🍄 Fungo in alto (Simon): Incredibile... li hai risolti tutti. Beh, hai vinto. Il tentacolo è tuo. \nSi dice che scelga solo menti... saporite."
   ];
 
   lines.forEach(line => {

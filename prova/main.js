@@ -26,6 +26,7 @@ currentTalkingBone,
 boneSimon,
 animateArms,
 boneBritney,
+animateTentacle,
 animateBritney} from './MushroomRiddle.js';
 
 // === SCENA, CAMERA, RENDERER ===
@@ -205,12 +206,9 @@ function animate(time) {
     // mushroom riddle
     updateMushroomInteraction(characterController.getPlayerPosition());
     updateTentacleInteraction(characterController.getPlayerPosition());
-    
-        animateTalkingHead(boneSimon, performance.now() / 1000);
-    
-    
+    animateTentacle(time);
+    animateTalkingHead(boneSimon, performance.now() / 1000);
     animateBritney(performance.now());
-    
     animateArms(time);
 
     const prompt = document.getElementById('interactionPrompt');
