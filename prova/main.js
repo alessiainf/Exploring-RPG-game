@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
-import { loadWorld, updateGrass, updateFlower } from './environment.js';
+import { loadWorld, updateGrass, updateFlower} from './environment.js';
 import { CharacterController } from './characterController.js';
 import { setupLights } from './lighting.js';
 import { physicsWorld, visualizeColliders } from './physics.js';
@@ -88,6 +88,8 @@ async function init() {
 
         // Carica il mondo (ora include la fisica)
         await loadWorld(scene);
+        physicsWorld.addMapBoundaries(100, 100, 10, 1);
+        //addProceduralFloor(scene, 300, 20); For procedural map
 
         console.log('Initializing character controller...');
 

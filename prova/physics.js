@@ -40,7 +40,7 @@ export class PhysicsWorld {
       // Ottieni la geometria del mesh
       const geometry = groundMesh.geometry;
       
-      if (geometry.isPlaneGeometry || groundMesh.name.toLowerCase().includes('plane')) {
+      if (geometry || groundMesh.name.toLowerCase().includes('plane')) {
         // Per un piano semplice, usa un cuboid collider
         const bbox = new THREE.Box3().setFromObject(groundMesh);
         const size = bbox.getSize(new THREE.Vector3());
@@ -220,7 +220,6 @@ addColumnColliders(columnMeshes) {
       console.error(`Error adding statue collider ${index}:`, error);
     }
   });
-    console.log(`Added ${colliders.length} statue colliders`);
   return colliders;
 }
 
@@ -262,7 +261,6 @@ addStatueColliders(statueMeshes) {
     }
   });
 
-  console.log(`Added ${colliders.length} statue colliders`);
   return colliders;
 }
 
@@ -295,7 +293,6 @@ addWizardCollider(wizardMesh) {
     this.meshToBody.set(wizardMesh, collider);
     this.bodyToMesh.set(collider, wizardMesh);
 
-    console.log('Wizard collider added');
     return collider;
   } catch (error) {
     console.error('Error adding wizard collider:', error);
@@ -335,6 +332,50 @@ addMushroomCollider(mushroomGroup) {
     return null;
   }
   
+}
+
+addMapBoundaries(areaWidth = 100, areaDepth = 100, wallHeight = 20, wallThickness = 2, centerX = 30, centerZ =-6) {
+  if (!this.ready) return [];
+
+  const colliders = [];
+
+  const halfW = areaWidth / 2;
+  const halfD = areaDepth / 2;
+  const halfH = wallHeight / 2;
+  const halfT = wallThickness / 2;
+
+  const walls = [
+    // Nord
+    {
+      position: { x: centerX, y: halfH, z: centerZ - halfD - halfT },
+      size: { x: halfW, y: halfH, z: halfT }
+    },
+    // Sud
+    {
+      position: { x: centerX, y: halfH, z: centerZ + halfD + halfT },
+      size: { x: halfW, y: halfH, z: halfT }
+    },
+    // Ovest
+    {
+      position: { x: centerX - halfW - halfT, y: halfH, z: centerZ },
+      size: { x: halfT, y: halfH, z: halfD }
+    },
+    // Est
+    {
+      position: { x: centerX + halfW + halfT, y: halfH, z: centerZ },
+      size: { x: halfT, y: halfH, z: halfD }
+    }
+  ];
+
+  for (const { position, size } of walls) {
+    const colliderDesc = RAPIER.ColliderDesc.cuboid(size.x, size.y, size.z);
+    colliderDesc.setTranslation(position.x, position.y, position.z);
+    const collider = this.world.createCollider(colliderDesc);
+    this.staticBodies.push(collider);
+    colliders.push(collider);
+  }
+
+  return colliders;
 }
 
 
@@ -452,9 +493,10 @@ export function visualizeColliders(scene) {
     visualMeshes.push(mesh);
   }
 
-  console.log("Collider wireframes visualizzati.");
   return visualMeshes;
 }
+
+
 
 
 

@@ -181,6 +181,107 @@ export function updateFlower(playerPosition, time) {
 }
 
 
+/*
+export function addProceduralFloor(scene, size = 300, segments = 30) {
+  const floorGroup = new THREE.Group();
+  const tileSize = size / segments;
+
+  const material = new THREE.MeshStandardMaterial({
+    color: 0x3C7626, // verde oliva scuro
+    roughness: 1,
+    metalness: 0,
+  });
+
+  // === CREAZIONE DEL PAVIMENTO ===
+  for (let x = -size / 2; x < size / 2; x += tileSize) {
+    for (let z = -size / 2; z < size / 2; z += tileSize) {
+      const geometry = new THREE.PlaneGeometry(tileSize, tileSize);
+      const tile = new THREE.Mesh(geometry, material);
+      tile.rotation.x = -Math.PI / 2;
+      tile.position.set(x + tileSize / 2, -0.1, z + tileSize / 2);
+      tile.receiveShadow = true;
+      floorGroup.add(tile);
+    }
+  }
+
+  scene.add(floorGroup);
+
+  // === ALBERI ED ERBA RANDOMICI FUORI DAL CENTRO ===
+  const addRandomObjects = () => {
+    const treeCount = 400;   // Aumentato
+    const grassCount = 3000;  // Aumentato
+    const exclusionRadius = 30; // zona interna senza oggetti (muri)
+
+        const exclusionCenterX = 30;
+    const exclusionCenterZ = -6;
+    const exclusionWidth = 100;
+    const exclusionDepth = 100;
+
+    function isOutsideWalls(x, z) {
+      return (
+        x < exclusionCenterX - exclusionWidth / 2 ||
+        x > exclusionCenterX + exclusionWidth / 2 ||
+        z < exclusionCenterZ - exclusionDepth / 2 ||
+        z > exclusionCenterZ + exclusionDepth / 2
+      );
+    }
+
+    // === Alberi ===
+    for (let i = 0; i < treeCount; i++) {
+      const tree = treeMeshes[0]?.clone();
+      if (!tree) continue;
+
+      let x, z;
+      let attempts = 0;
+      do {
+        x = (Math.random() - 0.5) * size;
+        z = (Math.random() - 0.5) * size;
+        attempts++;
+        if (attempts > 100) break; // evita loop infiniti
+      } while (!isOutsideWalls(x, z));
+
+      tree.position.set(x, 0, z);
+      tree.castShadow = true;
+      tree.receiveShadow = true;
+
+      const scale = 0.8 + Math.random() * 0.6;
+      tree.scale.set(scale, scale, scale);
+      scene.add(tree);
+    }
+
+    // === Erba ===
+    for (let i = 0; i < grassCount; i++) {
+      const grass = grassMeshes[0]?.clone();
+      if (!grass) continue;
+
+      let x, z;
+      let attempts = 0;
+      do {
+        x = (Math.random() - 0.5) * size;
+        z = (Math.random() - 0.5) * size;
+        attempts++;
+        if (attempts > 100) break;
+      } while (!isOutsideWalls(x, z));
+
+      grass.position.set(x, 0, z);
+      grass.rotation.y = Math.random() * Math.PI * 2;
+
+      const scale = 0.5 + Math.random() * 0.5;
+      grass.scale.set(scale, scale, scale);
+
+      grass.castShadow = true;
+      grass.receiveShadow = true;
+
+      scene.add(grass);
+    }
+  };
+
+  addRandomObjects();
+}
+
+*/
+
+
 // Pulisci le risorse quando necessario
 export function cleanupWorld() {
   grassMeshes.length = 0;

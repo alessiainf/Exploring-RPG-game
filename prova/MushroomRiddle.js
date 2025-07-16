@@ -54,17 +54,6 @@ export async function loadMushrooms(scene) {
   const gltf = await loader.loadAsync('assets/models/Mushrooms In A Trenc_an.glb');
   const mushroomGroup = gltf.scene;
 
-    // Stampa informazioni per verificare se è riggato
-  mushroomGroup.traverse(child => {
-    if (child.isSkinnedMesh) {
-      console.log('SkinnedMesh trovato:', child.name);
-      console.log('Skeleton:', child.skeleton);
-    }
-    if (child.isBone) {
-      console.log('Bone trovato:', child.name);
-    }
-  });
-
   mushroomGroup.position.set(63, -0.1, -21);
   mushroomGroup.rotation.set(0, 0, 0);
   mushroomGroup.scale.set(0.015, 0.015, 0.015);
@@ -77,6 +66,7 @@ export async function loadMushrooms(scene) {
     child.receiveShadow = true;
   });
 
+  
   mushroomGroup.traverse(child => {
   if (child.isBone) {
     if (child.name === 'CC_Base_Head') boneSimon = child;
