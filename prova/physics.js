@@ -130,66 +130,66 @@ export class PhysicsWorld {
     return colliders;
   }
 
-// Aggiunge collider statici (box) per le rocce
-addrockColliders(rockMeshes) {
-  if (!this.ready || !rockMeshes.length) return [];
+  // Aggiunge collider statici (box) per le rocce
+  addrockColliders(rockMeshes) {
+    if (!this.ready || !rockMeshes.length) return [];
 
-  const colliders = [];
+    const colliders = [];
 
-  rockMeshes.forEach((rockMesh, index) => {
-    try {
-      // Calcola il bounding box della roccia
-      const bbox = new THREE.Box3().setFromObject(rockMesh);
-      const size = bbox.getSize(new THREE.Vector3());
+    rockMeshes.forEach((rockMesh, index) => {
+      try {
+        // Calcola il bounding box della roccia
+        const bbox = new THREE.Box3().setFromObject(rockMesh);
+        const size = bbox.getSize(new THREE.Vector3());
 
-      // Calcola le dimensioni del box (serve metà estensione)
-      const halfExtents = {
-        x: size.x * 0.3,
-        y: size.y * 0.3,
-        z: size.z * 0.39
-      };
+        // Calcola le dimensioni del box (serve metà estensione)
+        const halfExtents = {
+          x: size.x * 0.3,
+          y: size.y * 0.3,
+          z: size.z * 0.39
+        };
 
-      // Crea un collider box (cuboid)
-      const colliderDesc = RAPIER.ColliderDesc.cuboid(
-        halfExtents.x,
-        halfExtents.y,
-        halfExtents.z
-      );
+        // Crea un collider box (cuboid)
+        const colliderDesc = RAPIER.ColliderDesc.cuboid(
+          halfExtents.x,
+          halfExtents.y,
+          halfExtents.z
+        );
 
-      // Calcola la posizione della roccia nel mondo
-      const position = rockMesh.getWorldPosition(new THREE.Vector3());
+        // Calcola la posizione della roccia nel mondo
+        const position = rockMesh.getWorldPosition(new THREE.Vector3());
 
-      // Sposta il collider nel punto giusto (metà altezza in Y)
-      colliderDesc.setTranslation(
-        position.x,
-        position.y + halfExtents.y,
-        position.z
-      );
+        // Sposta il collider nel punto giusto (metà altezza in Y)
+        colliderDesc.setTranslation(
+          position.x,
+          position.y + halfExtents.y,
+          position.z
+        );
 
-      // Crea il collider nel mondo fisico
-      const collider = this.world.createCollider(colliderDesc);
+        // Crea il collider nel mondo fisico
+        const collider = this.world.createCollider(colliderDesc);
 
-      // Mappa la mesh al collider
-      this.staticBodies.push(collider);
-      this.meshToBody.set(rockMesh, collider);
-      this.bodyToMesh.set(collider, rockMesh);
+        // Mappa la mesh al collider
+        this.staticBodies.push(collider);
+        this.meshToBody.set(rockMesh, collider);
+        this.bodyToMesh.set(collider, rockMesh);
 
-      colliders.push(collider);
-    } catch (error) {
-      console.error(`Errore durante il collider della roccia ${index}:`, error);
-    }
-  });
+        colliders.push(collider);
+      } catch (error) {
+        console.error(`Errore durante il collider della roccia ${index}:`, error);
+      }
+    });
 
   //console.log(`Aggiunti ${colliders.length} collider per rocce`);
   return colliders;
-}
+  }
 
-addColumnColliders(columnMeshes) {
+  addColumnColliders(columnMeshes) {
   if (!this.ready || !columnMeshes.length) return [];
 
   const colliders = [];
 
- columnMeshes.forEach((columnMeshes, index) => {
+  columnMeshes.forEach((columnMeshes, index) => {
     try {
       // Calcola le dimensioni approssimative della statua
       const bbox = new THREE.Box3().setFromObject(columnMeshes);
@@ -221,10 +221,10 @@ addColumnColliders(columnMeshes) {
     }
   });
   return colliders;
-}
+  }
 
 
-addStatueColliders(statueMeshes) {
+  addStatueColliders(statueMeshes) {
   if (!this.ready || !statueMeshes.length) return [];
 
   const colliders = [];
@@ -262,10 +262,10 @@ addStatueColliders(statueMeshes) {
   });
 
   return colliders;
-}
+  }
 
-// Aggiunge collider cilindrico per il mago
-addWizardCollider(wizardMesh) {
+  // Aggiunge collider cilindrico per il mago
+  addWizardCollider(wizardMesh) {
   if (!this.ready || !wizardMesh) return null;
 
   try {
@@ -298,10 +298,10 @@ addWizardCollider(wizardMesh) {
     console.error('Error adding wizard collider:', error);
     return null;
   }
-}
+  }
 
 
-addMushroomCollider(mushroomGroup) {
+  addMushroomCollider(mushroomGroup) {
   if (!this.ready || !mushroomGroup) return null;
 
   try {
@@ -331,10 +331,122 @@ addMushroomCollider(mushroomGroup) {
     console.error('Error adding mushroom collider:', error);
     return null;
   }
-  
+
+  }
+
+  addCrateColliders(crateMeshes) {
+  if (!this.ready || !crateMeshes.length) return [];
+
+  const colliders = [];
+
+  crateMeshes.forEach((crateMesh, index) => {
+    try {
+      const bbox = new THREE.Box3().setFromObject(crateMesh);
+      const size = bbox.getSize(new THREE.Vector3());
+
+      const halfExtents = {
+        x: size.x * 0.5,
+        y: size.y * 0.5,
+        z: size.z * 0.5
+      };
+
+      const colliderDesc = RAPIER.ColliderDesc.cuboid(
+        halfExtents.x, halfExtents.y, halfExtents.z
+      );
+
+      const position = crateMesh.getWorldPosition(new THREE.Vector3());
+      colliderDesc.setTranslation(
+        position.x,
+        position.y + halfExtents.y,
+        position.z
+      );
+
+      const collider = this.world.createCollider(colliderDesc);
+      this.staticBodies.push(collider);
+      this.meshToBody.set(crateMesh, collider);
+      this.bodyToMesh.set(collider, crateMesh);
+      colliders.push(collider);
+    } catch (error) {
+      console.error(`Error adding crate collider ${index}:`, error);
+    }
+  });
+
+  return colliders;
+  }
+
+  addStandColliders(standMeshes) {
+  if (!this.ready || !standMeshes.length) return [];
+
+  const colliders = [];
+
+  standMeshes.forEach((standMesh, index) => {
+    try {
+      const bbox = new THREE.Box3().setFromObject(standMesh);
+      const size = bbox.getSize(new THREE.Vector3());
+
+      const halfExtents = {
+        x: size.x * 0.5,
+        y: size.y * 0.5,
+        z: size.z * 0.5
+      };
+
+      const colliderDesc = RAPIER.ColliderDesc.cuboid(
+        halfExtents.x, halfExtents.y, halfExtents.z
+      );
+
+      const position = standMesh.getWorldPosition(new THREE.Vector3());
+      colliderDesc.setTranslation(
+        position.x,
+        position.y + halfExtents.y,
+        position.z
+      );
+
+      const collider = this.world.createCollider(colliderDesc);
+      this.staticBodies.push(collider);
+      this.meshToBody.set(standMesh, collider);
+      this.bodyToMesh.set(collider, standMesh);
+      colliders.push(collider);
+    } catch (error) {
+      console.error(`Error adding stand collider ${index}:`, error);
+    }
+  });
+
+  return colliders;
+  }
+
+  // Aggiunge un collider sferico statico per l'ape
+// Aggiunge un collider sferico statico per l'ape
+addBeeCollider(beeMesh) {
+  if (!this.ready || !beeMesh) return null;
+
+  try {
+    const radius = 0.5;  // Raggio fisso della sfera
+    const colliderDesc = RAPIER.ColliderDesc.ball(radius);
+
+    // Prendi posizione dell’ape
+    const position = beeMesh.getWorldPosition(new THREE.Vector3());
+    colliderDesc.setTranslation(position.x, position.y + radius, position.z);
+
+    const collider = this.world.createCollider(colliderDesc);
+
+    this.staticBodies.push(collider);
+    this.meshToBody.set(beeMesh, collider);
+    this.bodyToMesh.set(collider, beeMesh);
+
+    return collider;
+  } catch (error) {
+    console.error('Error adding bee collider:', error);
+    return null;
+  }
 }
 
-addMapBoundaries(areaWidth = 100, areaDepth = 100, wallHeight = 20, wallThickness = 2, centerX = 30, centerZ =-6) {
+
+
+
+
+
+
+  addMapBoundaries(areaWidth = 100, areaDepth = 100, wallHeight = 20, wallThickness = 2, centerX = 30, centerZ =-6) {
   if (!this.ready) return [];
 
   const colliders = [];
@@ -376,11 +488,11 @@ addMapBoundaries(areaWidth = 100, areaDepth = 100, wallHeight = 20, wallThicknes
   }
 
   return colliders;
-}
+  }
 
 
 
-  
+
 
   // Aggiorna il mondo fisico
   update(deltaTime) {
@@ -391,7 +503,7 @@ addMapBoundaries(areaWidth = 100, areaDepth = 100, wallHeight = 20, wallThicknes
   }
 
 
- 
+
   // Raycast per controllare collisioni
   raycast(origin, direction, maxDistance = 1000) {
     if (!this.ready) return null;
@@ -477,6 +589,12 @@ export function visualizeColliders(scene) {
         geometry = new THREE.BufferGeometry();
         geometry.setAttribute('position', new THREE.BufferAttribute(vertices, 3));
         geometry.setIndex(new THREE.BufferAttribute(indices, 1));
+      } else if (shape.type === RAPIER.ShapeType.Ball) {
+        geometry = new THREE.SphereGeometry(
+          shape.radius,
+          16,
+          16
+        );
       } else {
         console.warn("Unsupported shape:", shape.type);
         continue;

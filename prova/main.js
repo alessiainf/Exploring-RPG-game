@@ -1,6 +1,9 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
-import { loadWorld, updateGrass, updateFlower} from './environment.js';
+import { loadWorld, 
+    updateGrass,
+    addProceduralFloor, 
+    updateFlower} from './environment.js';
 import { CharacterController } from './characterController.js';
 import { setupLights } from './lighting.js';
 import { physicsWorld, visualizeColliders } from './physics.js';
@@ -28,6 +31,12 @@ animateArms,
 boneBritney,
 animateTentacle,
 animateBritney} from './MushroomRiddle.js';
+import {
+  loadBeeGame,
+  updateBeeGame,
+  beeMixer,
+} from './beeGame.js';
+import { hasCollectedAll } from './GameState.js';
 
 // === SCENA, CAMERA, RENDERER ===
 const scene = new THREE.Scene();
@@ -62,6 +71,10 @@ await loadBook(scene);
 await loadMushrooms(scene);
 await loadTentacle(scene);
 
+//bee game
+await loadBeeGame(scene);
+
+
 export const promptState = {
   active: false,
   text: '',
@@ -89,7 +102,7 @@ async function init() {
         // Carica il mondo (ora include la fisica)
         await loadWorld(scene);
         physicsWorld.addMapBoundaries(100, 100, 10, 1);
-        //addProceduralFloor(scene, 300, 20); For procedural map
+        //addProceduralFloor(scene, 300, 20); //For procedural map
 
         console.log('Initializing character controller...');
 
@@ -212,6 +225,11 @@ function animate(time) {
     animateTalkingHead(boneSimon, performance.now() / 1000);
     animateBritney(performance.now());
     animateArms(time);
+
+    // bee game
+    updateBeeGame(characterController.getPlayerPosition(), scene);
+    if (beeMixer) beeMixer.update(delta);
+
 
     const prompt = document.getElementById('interactionPrompt');
     if (promptState.active) {

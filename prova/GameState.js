@@ -32,10 +32,10 @@ export function hasCollectedAll() {
 
 
 
-//import { hasCollectedAll } from './GameState.js';
-
 //
-//if (hasCollectedAll()) {
+
+
+if (hasCollectedAll()) {
 //  // apri la porta o attiva l'uscita
-//}
+}
 //FINE GIOCO

@@ -3,6 +3,7 @@ import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { physicsWorld } from './physics.js';
 import { statues, wizard} from './Statuegame.js';
 import { mushrooms} from './MushroomRiddle.js';
+import { bee } from './beeGame.js';
 
 export const grassMeshes = [];
 export const flowerMeshes = [];
@@ -10,6 +11,9 @@ export const treeMeshes = [];
 export const rockMeshes = [];
 export const columnMeshes = [];
 export let groundMesh = null;
+export const crateMeshes = [];
+export const standMeshes = [];
+
 
 // Carica il modello del mondo creato in Blender
 export async function loadWorld(scene) {
@@ -62,6 +66,17 @@ export async function loadWorld(scene) {
         if (child.name.toLowerCase().includes("column")) {
           columnMeshes.push(child);
         }
+
+        // Identifica le casse
+        if (child.name.toLowerCase().includes("crate")) {
+          crateMeshes.push(child);
+        }
+
+        // Identifica i piedistalli
+        if (child.name.toLowerCase().includes("stand")) {
+          standMeshes.push(child);
+        }
+
       });
       
       scene.add(world);
@@ -125,6 +140,21 @@ function setupWorldPhysics() {
     physicsWorld.addMushroomCollider(mushrooms[0]);
   }
 
+  //aggiungi collider ape
+  if (bee) {
+    physicsWorld.addBeeCollider(bee); 
+  }
+  
+
+  if (crateMeshes.length > 0) {
+  physicsWorld.addCrateColliders(crateMeshes);
+}
+
+if (standMeshes.length > 0) {
+  physicsWorld.addStandColliders(standMeshes);
+}
+
+
 }
 
 // Funzione helper per ottenere l'altezza del terreno in una posizione
@@ -181,7 +211,7 @@ export function updateFlower(playerPosition, time) {
 }
 
 
-/*
+
 export function addProceduralFloor(scene, size = 300, segments = 30) {
   const floorGroup = new THREE.Group();
   const tileSize = size / segments;
@@ -279,7 +309,7 @@ export function addProceduralFloor(scene, size = 300, segments = 30) {
   addRandomObjects();
 }
 
-*/
+
 
 
 // Pulisci le risorse quando necessario

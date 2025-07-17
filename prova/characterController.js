@@ -157,7 +157,11 @@ export class CharacterController {
             //const startPosition = { x: 18, y: totalHeight*0.47, z: -30 };
 
             //mushrooms
-            const startPosition = { x: 70, y: totalHeight*0.47, z: -25};
+            //const startPosition = { x: 70, y: totalHeight*0.47, z: -25};
+
+    
+            //bee game
+            const startPosition = { x: 20, y: totalHeight * 0.47, z: 36 };
             
             rigidBodyDesc.setTranslation(startPosition.x, startPosition.y, startPosition.z);
 
