@@ -22,11 +22,11 @@ let beeFlyingAction;
 
 
 let collectiblePositions = [
-  new THREE.Vector3(-5, 0, -5),
-  new THREE.Vector3(3, 0, -7),
-  new THREE.Vector3(6, 0, 3),
-  new THREE.Vector3(-6, 0, 6),
-  new THREE.Vector3(0, 0, 8)
+  new THREE.Vector3(30, 0, 24),
+  new THREE.Vector3(35, 0, 25),
+  new THREE.Vector3(36, 0, 35),
+  new THREE.Vector3(29, 0, 38),
+  new THREE.Vector3(32, 0, 32)
 ];
 
 const loader = new GLTFLoader();
