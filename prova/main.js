@@ -1,4 +1,6 @@
 import * as THREE from 'three';
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+import { AnimationMixer } from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { loadWorld, 
     updateGrass,
@@ -159,6 +161,75 @@ async function loadWorldWithoutPhysics() {
     });
 }
 
+//easter egg
+let robotMixer = null; // globale
+
+function loadRobotModel() {
+  const robotGroup = new THREE.Group();
+  const loader = new GLTFLoader();
+
+  loader.load('assets/models/Robot.glb', gltf => {
+    const model = gltf.scene;
+    robotGroup.add(model);
+
+    robotMixer = new AnimationMixer(model);
+    const idleClip = gltf.animations.find(clip => clip.name.includes('Idle'));
+
+    if (idleClip) {
+      const idleAction = robotMixer.clipAction(idleClip);
+      idleAction.play();
+    } else {
+      console.warn('Animazione Idle non trovata nel robot!');
+    }
+  });
+
+  return robotGroup;
+}
+
+function showTextOverlay(text) {
+  let div = document.createElement('div');
+  div.id = 'easter-egg-overlay';
+  div.style.position = 'absolute';
+  div.style.top = '40%';
+  div.style.left = '50%';
+  div.style.transform = 'translate(-50%, -50%)';
+  div.style.color = 'white';
+  div.style.fontSize = '24px';
+  div.style.backgroundColor = 'rgba(0, 0, 0, 0.7)';
+  div.style.padding = '20px';
+  div.style.borderRadius = '10px';
+  div.style.zIndex = 1000;
+  div.innerText = text;
+  document.body.appendChild(div);
+}
+
+function hideTextOverlay() {
+  const div = document.getElementById('easter-egg-overlay');
+  if (div) div.remove();
+}
+
+
+let easterEggTriggered = false;
+let robot = null;
+const startPosition = { x: -15, y: -0.04, z: -5 };
+
+
+function triggerOutOfBoundsEasterEgg() {
+  easterEggTriggered = true;
+
+  characterController.freeze(); // blocca movimento
+
+  robot = loadRobotModel(); // carica il robot
+  scene.add(robot);
+
+  const pos = characterController.getPlayerPosition().clone();
+  robot.position.copy(pos).add(new THREE.Vector3(0, 2, -2));
+  robot.lookAt(camera.position);
+
+  showTextOverlay("Ehm... non dovresti essere qui.\nPremi F per tornare indietro.");
+}
+
+
 
 let collidersShown = false;
 let colliderVisuals = [];
@@ -230,6 +301,14 @@ function animate(time) {
     updateBeeGame(characterController.getPlayerPosition(), scene);
     if (beeMixer) beeMixer.update(delta);
 
+
+    //easter egg
+    if (!easterEggTriggered && physicsWorld.isOutsideMap(characterController.getPlayerPosition())) {
+    triggerOutOfBoundsEasterEgg();
+    }
+    if (robotMixer) {
+    robotMixer.update(delta);
+    }
 
     const prompt = document.getElementById('interactionPrompt');
     if (promptState.active) {
@@ -318,6 +397,26 @@ window.addEventListener('keydown', (event) => {
     // Premi 'W' per attivare/disattivare il wireframe del corpo fisico
     if (event.key.toLowerCase() === 'h' && characterController) {
         characterController.toggleWireframe();
+    }
+
+    if (event.key.toLowerCase() === 'f' && easterEggTriggered) {
+    const safePosition = new THREE.Vector3(
+        startPosition.x,
+        startPosition.y,
+        startPosition.z
+    );
+
+    characterController.setPosition(
+        safePosition.x,
+        safePosition.y,
+        safePosition.z
+    );
+
+    scene.remove(robot);
+    hideTextOverlay();
+    characterController.unfreeze();
+    easterEggTriggered = false;
+    robot = null;
     }
 });
 

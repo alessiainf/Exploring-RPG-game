@@ -486,9 +486,22 @@ addBeeCollider(beeMesh) {
     this.staticBodies.push(collider);
     colliders.push(collider);
   }
+  this.boundaryParams = { areaWidth, areaDepth, centerX, centerZ };
 
   return colliders;
   }
+
+  isOutsideMap(position) {
+    const { centerX, centerZ, areaWidth, areaDepth } = this.boundaryParams;
+    const x = position.x, z = position.z;
+    const margin = 2; // quanto puoi uscire prima che scatti l’easter egg
+
+    return (
+      x < centerX - areaWidth / 2 - margin || x > centerX + areaWidth / 2 + margin ||
+      z < centerZ - areaDepth / 2 - margin || z > centerZ + areaDepth / 2 + margin
+    );
+  }
+
 
 
 

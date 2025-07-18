@@ -18,6 +18,7 @@ export class CharacterController {
         this.currentAction = null;
         this.chestBone = null;
         this.modelOffsetY = 0;
+        this.frozen = false;
 
         this.thirdPersonCamera = null;
 
@@ -51,7 +52,7 @@ export class CharacterController {
         };
         this.movementVector = new THREE.Vector3();
         this.targetRotation = new THREE.Quaternion(); // Nuova variabile per la rotazione target
-
+        
         this.init();
     }
 
@@ -181,6 +182,14 @@ export class CharacterController {
         } catch (error) {
             console.error('Error creating character physics body:', error);
         }
+    }
+
+    freeze() {
+        this.frozen = true;
+    }
+
+    unfreeze() {
+        this.frozen = false;
     }
 
     createDebugWireframe() {
@@ -349,6 +358,7 @@ setPosition(x, y, z) {
 
     update(deltaTime) {
         const delta = this.clock.getDelta();
+        if (this.frozen) return;
 
         if (this.mixer) this.mixer.update(delta);
 
