@@ -230,8 +230,10 @@ export function updateInteraction(playerPosition, scene) {
   statues.forEach(statue => {
     const dist = statue.position.distanceTo(playerPosition);
 
-    if (dist < 3) {
+    // Solo se la collana NON è stata sbloccata
+    if (!necklaceUnlocked && dist < 3) {
       nearAnyStatue = true;
+
       if (keys.fPressed) {
         statue.userData.targetRotationY -= Math.PI / 2;
         keys.fPressed = false;
@@ -246,6 +248,7 @@ export function updateInteraction(playerPosition, scene) {
       statue.rotation.y = targetY;
     }
   });
+
 
   // === Mago ===
   if (wizard && playerPosition.distanceTo(wizard.position) < 2) {
@@ -291,19 +294,26 @@ if (checkStatueOrientations() && !thankedPlayer) {
 
 
 
-  // Mostra "Premi F" se vicino a una statua o al mago e non stai parlando
 const dialogueVisible = dialogueBox && dialogueBox.style.display !== 'none';
 
 // Se già mostrato un messaggio per la collana, non fare nulla
 if (showingNecklacePrompt) return;
 
-// Altrimenti, mostra "Premi F" se sei vicino a statue, hint o mago e non stai parlando
-const shouldShowPrompt = nearAnyStatue || nearHint || nearWizard;
-
-if (!dialogueVisible && shouldShowPrompt) {
-  promptState.active = true;
-  promptState.text = 'Premi F';
+// Messaggio contestuale
+if (!dialogueVisible) {
+  if (nearAnyStatue && !necklaceUnlocked) {
+    promptState.active = true;
+    promptState.text = '🔁 Premi F per ruotare le statue';
+  } else if (nearHint) {
+    promptState.active = true;
+    promptState.text = '📜 Premi F per leggere l\'incisione';
+  } else if (nearWizard) {
+    promptState.active = true;
+    promptState.text = '🧙 Premi F per parlare con il mago';
+  }
 }
+
+
 
 
 }

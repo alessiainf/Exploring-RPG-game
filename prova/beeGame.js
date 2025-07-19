@@ -38,7 +38,7 @@ export async function loadBeeGame(scene) {
   bee = beeGltf.scene;
   bee.position.set(20, 1.2, 36);
   bee.rotation.y = Math.PI;
-  bee.scale.set(0.7, 0.7, 0.7);
+  bee.scale.set(0.6, 0.6, 0.6);
   scene.add(bee);
   setupBeePhysics();
 

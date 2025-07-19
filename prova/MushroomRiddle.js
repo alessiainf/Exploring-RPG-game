@@ -4,6 +4,7 @@ import { physicsWorld } from './physics.js';
 import { collectItem } from './GameState.js';
 import { keys } from './InputManager.js';
 import { promptState } from './main.js';
+import { initSpores } from './Weather.js';
 
 
 let dialogueStep = 0;
@@ -79,6 +80,8 @@ export async function loadMushrooms(scene) {
 
   mushrooms.push(mushroomGroup); 
   setupMushroomPhysics(mushroomGroup);
+  initSpores(scene, mushroomRoot.position);
+
 }
 
 

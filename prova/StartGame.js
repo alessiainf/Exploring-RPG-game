@@ -83,11 +83,11 @@ export function updateBookInteraction(playerPosition) {
         // Mostra istruzioni
         dialogueBox.innerHTML = `
           🧾 <b>ISTRUZIONI:</b><br>
-           "Chiunque voglia fuggire da queste Terre Velate, dovrà risvegliare l’antico Portale.
-          Per farlo, non bastano la forza o l’ingegno, ma servono tre Doni perduti nel tempo:<br>
-          🔮 <b>La Collana del Vento</b>, custodita da un mago che attende il risveglio dei Guardiani di Pietra.<br>
-          🍯 <b>Il Miele Dorato</b>, gelosamente tenuto da un’Ape capricciosa, che non si lascia convincere con facilità.<br>
-          🐙 <b>Il Tentacolo d'Ombra</b>, strappato all'abisso di ciò che è stato.<br>
+           "Chiunque voglia fuggire da queste Terre Velate, dovrà risvegliare l’antico Portale a Nord.
+          Per farlo servono tre Doni perduti nel tempo:<br>
+          🔮 <b>La Collana del Vento</b>.<br>
+          🍯 <b>Il Miele Dorato</b>.<br>
+          🐙 <b>Il Tentacolo d'Ombra</b>.<br>
           Quando i tre Doni saranno tuoi, il Portale si aprirà... e il cammino verso la libertà sarà finalmente tracciato."<br><br>
         `;
         dialogueBox.style.display = 'block';
