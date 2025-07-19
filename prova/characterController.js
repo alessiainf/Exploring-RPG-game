@@ -152,7 +152,7 @@ export class CharacterController {
             const rigidBodyDesc = RAPIER.RigidBodyDesc.kinematicPositionBased();
             
             //start game
-            //const startPosition = { x: -15, y: totalHeight*0.47, z: -5 };
+            const startPosition = { x: -15, y: totalHeight*0.47, z: -5 };
 
             //statue
             //const startPosition = { x: 18, y: totalHeight*0.47, z: -30 };
@@ -162,7 +162,7 @@ export class CharacterController {
 
     
             //bee game
-            const startPosition = { x: 20, y: totalHeight * 0.47, z: 36 };
+            //const startPosition = { x: 20, y: totalHeight * 0.47, z: 36 };
             
             rigidBodyDesc.setTranslation(startPosition.x, startPosition.y, startPosition.z);
 

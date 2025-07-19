@@ -4,6 +4,7 @@ import { keys } from './InputManager.js';
 import { promptState } from './main.js';
 import { collectItem } from './GameState.js';
 import { physicsWorld } from './physics.js';
+import { initDandelions } from './Weather.js';
 
 export let bee = null;
 export let honey = null;
@@ -95,21 +96,23 @@ export async function loadBeeGame(scene) {
   document.body.appendChild(timerBox);
 
   // Contatore degli oggetti raccolti
-const counterBox = document.createElement('div');
-counterBox.id = 'counterBox';
-counterBox.style.position = 'absolute';
-counterBox.style.top = '17%';
-counterBox.style.left = '50%';
-counterBox.style.transform = 'translateX(-50%)';
-counterBox.style.color = '#ffcc00';
-counterBox.style.fontSize = '30px';
-counterBox.style.fontWeight = 'bold';
-counterBox.style.backgroundColor = 'rgba(0, 0, 0, 0.7)';
-counterBox.style.padding = '12px 20px';
-counterBox.style.borderRadius = '10px';
-counterBox.style.display = 'none';
-counterBox.style.zIndex = '1000';
-document.body.appendChild(counterBox);
+  const counterBox = document.createElement('div');
+  counterBox.id = 'counterBox';
+  counterBox.style.position = 'absolute';
+  counterBox.style.top = '17%';
+  counterBox.style.left = '50%';
+  counterBox.style.transform = 'translateX(-50%)';
+  counterBox.style.color = '#ffcc00';
+  counterBox.style.fontSize = '30px';
+  counterBox.style.fontWeight = 'bold';
+  counterBox.style.backgroundColor = 'rgba(0, 0, 0, 0.7)';
+  counterBox.style.padding = '12px 20px';
+  counterBox.style.borderRadius = '10px';
+  counterBox.style.display = 'none';
+  counterBox.style.zIndex = '1000';
+  document.body.appendChild(counterBox);
+
+  initDandelions(scene, bee.position.clone());
 }
 
 // fisica per l'ape
@@ -122,6 +125,7 @@ function setupBeePhysics() {
   if (bee) {
     physicsWorld.addBeeCollider();
   }
+  
 }
 
 
