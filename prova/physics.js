@@ -300,6 +300,47 @@ export class PhysicsWorld {
   }
   }
 
+ addHintCollider(mesh) {
+  if (!this.ready || !mesh) return null;
+
+  try {
+    // Calcola bounding box dell'oggetto hint
+    const bbox = new THREE.Box3().setFromObject(mesh);
+    const size = bbox.getSize(new THREE.Vector3());
+
+    const halfExtents = {
+      x: size.x / 2,
+      y: size.y / 2,
+      z: size.z / 2
+    };
+
+    // Ottieni posizione globale
+    const position = mesh.getWorldPosition(new THREE.Vector3());
+
+    // Crea un rigid body statico
+    const rigidBodyDesc = RAPIER.RigidBodyDesc.fixed().setTranslation(position.x, position.y + halfExtents.y, position.z);
+    const rigidBody = this.world.createRigidBody(rigidBodyDesc);
+
+    // Crea il collider con dimensioni reali
+    const colliderDesc = RAPIER.ColliderDesc.cuboid(halfExtents.x, halfExtents.y, halfExtents.z);
+    const collider = this.world.createCollider(colliderDesc, rigidBody);
+
+    // Salva mapping
+    this.staticBodies.push(collider);
+    this.meshToBody.set(mesh, collider);
+    this.bodyToMesh.set(collider, mesh);
+
+    return collider;
+
+  } catch (error) {
+    console.error('Error adding hint collider:', error);
+    return null;
+  }
+}
+
+
+
+
 
   addMushroomCollider(mushroomGroup) {
   if (!this.ready || !mushroomGroup) return null;

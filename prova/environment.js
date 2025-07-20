@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { physicsWorld } from './physics.js';
-import { statues, wizard} from './Statuegame.js';
+import { hintObject, statues, wizard} from './Statuegame.js';
 import { mushrooms} from './MushroomRiddle.js';
 import { bee } from './beeGame.js';
 
@@ -135,6 +135,10 @@ function setupWorldPhysics() {
     physicsWorld.addWizardCollider(wizard);
   }
 
+  if(hintObject) {
+    physicsWorld.addHintCollider(hintObject); 
+  }
+
     // Aggiungi collider per il fungo
   if (mushrooms.length > 0) {
     physicsWorld.addMushroomCollider(mushrooms[0]);
@@ -239,7 +243,7 @@ export function addProceduralFloor(scene, size = 300, segments = 30) {
   // === ALBERI ED ERBA RANDOMICI FUORI DAL CENTRO ===
   const addRandomObjects = () => {
     const treeCount = 400;   // Aumentato
-    const grassCount = 3000;  // Aumentato
+    const grassCount = 5000;  // Aumentato
     const exclusionRadius = 30; // zona interna senza oggetti (muri)
 
         const exclusionCenterX = 30;

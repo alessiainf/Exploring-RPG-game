@@ -152,10 +152,10 @@ export class CharacterController {
             const rigidBodyDesc = RAPIER.RigidBodyDesc.kinematicPositionBased();
             
             //start game
-            const startPosition = { x: -15, y: totalHeight*0.47, z: -5 };
+            //const startPosition = { x: -15, y: totalHeight*0.47, z: -5 };
 
             //statue
-            //const startPosition = { x: 18, y: totalHeight*0.47, z: -30 };
+            const startPosition = { x: 18, y: totalHeight*0.47, z: -30 };
 
             //mushrooms
             //const startPosition = { x: 70, y: totalHeight*0.47, z: -25};

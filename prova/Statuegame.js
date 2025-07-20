@@ -11,6 +11,14 @@ let chestBone = null;
 let necklace = null;
 let nearWizard = false;
 let dialogueStep = 0;
+let wizardArmBone = null;
+let isWizardTalking = false;
+export { isWizardTalking };
+let wizardTorso = null;
+let wizardShoulderR = null;
+let wizardNeck = null;
+let wizardHead = null;
+let wizardFistR = null;
 
 
 
@@ -75,7 +83,25 @@ export async function loadWizard(scene) {
       if (child.isBone && child.name === 'Torso') {
         chestBone = child;
       }
+     if (child.isBone) {
+      if (child.name === 'UpperArmR') wizardArmBone = child;
+      if (child.name === 'Torso') wizardTorso = child;
+      if (child.name === 'ShoulderR') wizardShoulderR = child;
+      if (child.name === 'Neck') wizardNeck = child;
+      if (child.name === 'Head') wizardHead = child;
+      if (child.name === 'FistR') wizardFistR = child;
+    }
+
+
+
     });
+
+    wizard.traverse(child => {
+  if (child.isBone) {
+    console.log('Bone name:', child.name);
+  }
+});
+
 
     // Aggiungi collider per il mago 
     setupWizardPhysics();
@@ -92,6 +118,36 @@ export function updateBreathing(deltaTime) {
   chestBone.position.z = Math.sin(t * 2.0) * 0.0002;
   chestBone.scale.y = 1.0 + Math.sin(t * 2.0) * 0.003;
 }
+
+export function animateWizardSpeaking(timeMs) {
+  const t = timeMs / 1000;
+
+  // Respiro generale
+  const breath = Math.sin(t * 0.2 * Math.PI * 2);
+
+  // Gesticolazione attiva solo se parla
+  const gesture = isWizardTalking ? Math.sin(t * 2.5) : 0;
+
+  if (wizardArmBone)
+    wizardArmBone.rotation.y = -0.3 + gesture * 0.05 + breath * 0.05;
+
+  if (wizardTorso)
+    wizardTorso.rotation.z = breath * 0.02;
+
+  if (wizardShoulderR)
+    wizardShoulderR.rotation.x = gesture * 0.01;
+
+  if (wizardNeck)
+    wizardNeck.rotation.x = gesture * 0.02;
+
+  if (wizardHead)
+    wizardHead.rotation.z = gesture * 0.05;
+
+  if (wizardFistR)
+    wizardFistR.rotation.z = gesture * 0.05;
+}
+
+
 
 export async function loadNecklace(scene) {
   const loader = new GLTFLoader();
@@ -118,24 +174,49 @@ export function updateNecklace(deltaTime) {
 
 
 let hintObject = null;
+let compass = null;
 let nearHint = false;
 let hintVisible = false; 
 
 export async function loadHintObject(scene) {
   const loader = new GLTFLoader();
+
+  // Carica lo shrine
   const gltf = await loader.loadAsync('assets/models/shrine.glb');  
   hintObject = gltf.scene;
-
   hintObject.position.set(11, -0.3, -43); 
   hintObject.scale.set(1.2, 1.2, 1.2);
-
   scene.add(hintObject);
 
   hintObject.traverse(child => {
     child.castShadow = true;
     child.receiveShadow = true;
   });
+
+  // Carica la rosa dei venti
+  const compassGltf = await loader.loadAsync('assets/models/compass_rose.glb');
+  compass = compassGltf.scene;
+
+  // Posizionala sopra lo shrine
+  compass.position.set(
+    hintObject.position.x,
+    hintObject.position.y + 3.45, // altezza sopra lo shrine
+    hintObject.position.z
+  );
+  compass.rotation.set(0, 0, -Math.PI/2); // orientata orizzontalmente
+  compass.scale.set(0.04, 0.04, 0.04);
+
+  scene.add(compass);
+
+  compass.traverse(child => {
+    child.castShadow = true;
+    child.receiveShadow = true;
+  });
+
+  setupHintPhysics();
+
 }
+
 
 
 //fisica per le statue
@@ -161,6 +242,19 @@ function setupWizardPhysics() {
     physicsWorld.addWizardCollider(wizard);
   }
 }
+
+// fisica per l'oggetto indizio
+function setupHintPhysics() {
+  if (!physicsWorld.ready) {
+    console.warn('Physics world not ready, skipping hint object physics setup');
+    return;
+  }
+
+  if (hintObject) {
+    physicsWorld.addHintCollider(hintObject);  // deve esistere questa funzione
+  }
+}
+
 
 let necklaceUnlocked = false;
 let necklaceCollected = false;
@@ -261,30 +355,38 @@ if (checkStatueOrientations() && !thankedPlayer) {
   // Le statue sono corrette e non abbiamo ancora ringraziato
   dialogueBox.textContent = '🧙‍♂️ Peppino: Grazie, avventuriero. Il tuo gesto non sarà dimenticato.';
   dialogueBox.style.display = 'block';
+  isWizardTalking = true;
   thankedPlayer = true;
 } else if (checkStatueOrientations() && thankedPlayer) {
   // Se le statue sono corrette e ha già ringraziato → chiude
   dialogueBox.style.display = 'none';
   thankedPlayer = false;
+  isWizardTalking = false;
+
 } else {
   // Conversazione normale finché le statue non sono giuste
   dialogueStep++;
   switch (dialogueStep) {
     case 1:
       dialogueBox.textContent = '🧝‍♂️ Avventuriero: Mi serve quella collana è la mia unica via di fuga. Me la darai?';
+      isWizardTalking = false;
       break;
     case 2:
       dialogueBox.textContent = '🧙‍♂️ Peppino: I Venti... sono muti da secoli. Ma tu... tu potresti risvegliarli.';
+      isWizardTalking = true;
       break;
     case 3:
       dialogueBox.textContent = '🧙‍♂️ Peppino: Quando i Guardiani si volgeranno verso i Venti giusti, il loro soffio tornerà a fluire... e con esso, anche la Luce.';
+      isWizardTalking = true;
       break;
     case 4:
       dialogueBox.textContent = '🧙‍♂️ Peppino: Restituisci l’orientamento alle Statue. Solo allora la nebbia svanirà, e la collana sarà tua.';
+      isWizardTalking = true;
       break;
     default:
       dialogueBox.style.display = 'none';
       dialogueStep = 0;
+      isWizardTalking = false;
       return;
   }
   dialogueBox.style.display = 'block';

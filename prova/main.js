@@ -16,12 +16,12 @@ import {
   loadNecklace,
   loadHintObject,
   updateBreathing,
+  animateWizardSpeaking,
   updateInteraction,
   updateNecklace,
 } from './Statuegame.js';
 import { initWeather, updateWeather } from './Weather.js';
 import { loadBook, updateBookInteraction } from './StartGame.js';
-import { updateBookEffect } from './StartGame.js';
 import { loadMushrooms, 
     loadTentacle, 
     updateMushroomInteraction, 
@@ -39,6 +39,13 @@ import {
   beeMixer,
 } from './beeGame.js';
 import { hasCollectedAll } from './GameState.js';
+import {
+  createCauldrons,
+  updateCauldronInteraction,
+  updateFireEffects,
+  checkDoorCollision
+} from './fireGame.js';
+
 
 // === SCENA, CAMERA, RENDERER ===
 const scene = new THREE.Scene();
@@ -118,6 +125,8 @@ async function init() {
         // Mostra le istruzioni
         showInstructions();
         initWeather(scene);
+        createCauldrons(scene);
+
 
 
     } catch (error) {
@@ -283,11 +292,13 @@ function animate(time) {
 
     // wizard game
     updateBreathing(delta);
+    animateWizardSpeaking(performance.now());
     updateNecklace(delta);
     updateInteraction(characterController.getPlayerPosition(), scene);
     updateWeather(characterController.getPlayerPosition());
+
+    //start game
     updateBookInteraction(characterController.getPlayerPosition());
-    updateBookEffect(time * 0.001);  // tempo in secondi
 
     // mushroom riddle
     updateMushroomInteraction(characterController.getPlayerPosition());
@@ -300,6 +311,13 @@ function animate(time) {
     // bee game
     updateBeeGame(characterController.getPlayerPosition(), scene);
     if (beeMixer) beeMixer.update(delta);
+
+    //fire game
+    updateCauldronInteraction(characterController.getPlayerPosition());
+    updateFireEffects();
+    checkDoorCollision(characterController.getPlayerPosition());
+
+
 
 
     //easter egg
