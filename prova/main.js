@@ -21,7 +21,7 @@ import {
   updateNecklace,
 } from './Statuegame.js';
 import { initWeather, updateWeather } from './Weather.js';
-import { loadBook, updateBookInteraction } from './StartGame.js';
+import { loadBook, updateBookInteraction, IntroManager } from './StartGame.js';
 import { loadMushrooms, 
     loadTentacle, 
     updateMushroomInteraction, 
@@ -439,6 +439,12 @@ window.addEventListener('keydown', (event) => {
 });
 
 // === AVVIO ===
+/*
 init().then(() => {
     animate();
+});
+*/
+
+new IntroManager(() => {
+  init().then(() => animate());
 });

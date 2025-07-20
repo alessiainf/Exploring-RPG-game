@@ -69,7 +69,7 @@ export function updateCauldronInteraction(playerPosition) {
     if (distance < 2 && !firesLit[i]) {
   if (hasCollectedAll()) {
     promptState.active = true;
-    promptState.text = `🔥 Press F to offer a gift`;
+    promptState.text = `🔥 Premi F per offrire un oggetto`;
 
     if (keys.fPressed) {
       keys.fPressed = false;
@@ -77,13 +77,13 @@ export function updateCauldronInteraction(playerPosition) {
     }
   } else {
     promptState.active = true;
-    promptState.text = `🛑 You need all 3 items to offer something`;
+    promptState.text = `🛑 Raccogli prima i 3 oggetti per offrirli`;
   }
 }*/
 
 if (distance < 2 && !firesLit[i]) {
       promptState.active = true;
-      promptState.text = `🔥 Press F to offer an item`;
+      promptState.text = `🔥 Premi F per offrire un oggetto`;
 
       if (keys.fPressed) {
         keys.fPressed = false;
@@ -256,7 +256,7 @@ export function checkDoorCollision(playerPosition) {
   if (distance < 1.5) {
     gameFinished = true;
 
-    // 🕳️ Overlay nero
+    // 🕳️ Overlay nero con fade-in
     const overlay = document.createElement('div');
     overlay.style.position = 'fixed';
     overlay.style.top = '0';
@@ -269,28 +269,41 @@ export function checkDoorCollision(playerPosition) {
     overlay.style.flexDirection = 'column';
     overlay.style.alignItems = 'center';
     overlay.style.justifyContent = 'center';
-    overlay.style.gap = '30px';
+    overlay.style.gap = '40px';
     overlay.style.color = 'white';
-    overlay.style.fontFamily = 'sans-serif';
-    overlay.style.transition = 'opacity 1s';
+    overlay.style.fontFamily = 'serif';
+    overlay.style.fontWeight = 'lighter';
+    overlay.style.opacity = '0';
+    overlay.style.transition = 'opacity 3s';
     document.body.appendChild(overlay);
 
-    // Testo finale
+    setTimeout(() => {
+      overlay.style.opacity = '1';
+    }, 100); // fade-in leggero
+
+    // Testo finale narrativo
     const text = document.createElement('div');
-    text.innerText = '✨ Sei fuggito! ✨';
-    text.style.fontSize = '48px';
+    text.innerText = 'Sei fuggito dal mondo delle Nebbie!\n\nMa le cicatrici della magia oscura non svaniscono.\nLa tua avventura nel mondo delle Ombre è appena cominciata...';
+    text.style.fontSize = '32px';
+    text.style.textAlign = 'center';
+    text.style.whiteSpace = 'pre-line';
+    text.style.maxWidth = '80%';
     overlay.appendChild(text);
 
     // Pulsante Rigioca
     const button = document.createElement('button');
-    button.innerText = 'Rigioca';
+    button.innerText = 'Torna all’inizio';
     button.style.padding = '15px 30px';
     button.style.fontSize = '20px';
     button.style.cursor = 'pointer';
     button.style.backgroundColor = '#ffffff';
     button.style.border = '2px solid white';
     button.style.borderRadius = '10px';
+    button.style.color = 'black';
+    button.onmouseenter = () => (button.style.backgroundColor = '#dddddd');
+    button.onmouseleave = () => (button.style.backgroundColor = '#ffffff');
     button.onclick = () => window.location.reload();
     overlay.appendChild(button);
   }
+
 }

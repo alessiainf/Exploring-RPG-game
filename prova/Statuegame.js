@@ -365,31 +365,36 @@ if (checkStatueOrientations() && !thankedPlayer) {
 
 } else {
   // Conversazione normale finché le statue non sono giuste
-  dialogueStep++;
-  switch (dialogueStep) {
-    case 1:
-      dialogueBox.textContent = '🧝‍♂️ Avventuriero: Mi serve quella collana è la mia unica via di fuga. Me la darai?';
-      isWizardTalking = false;
-      break;
-    case 2:
-      dialogueBox.textContent = '🧙‍♂️ Peppino: I Venti... sono muti da secoli. Ma tu... tu potresti risvegliarli.';
-      isWizardTalking = true;
-      break;
-    case 3:
-      dialogueBox.textContent = '🧙‍♂️ Peppino: Quando i Guardiani si volgeranno verso i Venti giusti, il loro soffio tornerà a fluire... e con esso, anche la Luce.';
-      isWizardTalking = true;
-      break;
-    case 4:
-      dialogueBox.textContent = '🧙‍♂️ Peppino: Restituisci l’orientamento alle Statue. Solo allora la nebbia svanirà, e la collana sarà tua.';
-      isWizardTalking = true;
-      break;
-    default:
-      dialogueBox.style.display = 'none';
-      dialogueStep = 0;
-      isWizardTalking = false;
-      return;
-  }
-  dialogueBox.style.display = 'block';
+dialogueStep++;
+switch (dialogueStep) {
+  case 1:
+    dialogueBox.textContent = '🧙‍♂️ Mago: ...Un’anima persa tra le nebbie? Non è comune vedere viandanti qui.';
+    isWizardTalking = true;
+    break;
+  case 2:
+    dialogueBox.textContent = '🧝‍♂️ Avventuriero: Cerco una via d’uscita. Sono alla ricerca della Collana del Vento.';
+    isWizardTalking = false;
+    break;
+  case 3:
+    dialogueBox.textContent = '🧙‍♂️ Peppino: È un oggetto antico, legato a forze dimenticate. Io sono Peppino, guardiano di ciò che resta.';
+    isWizardTalking = true;
+    break;
+  case 4:
+    dialogueBox.textContent = '🧙‍♂️ Peppino: Ma non tutto si conquista con la forza. I Venti devono tornare a parlare prima.';
+    isWizardTalking = true;
+    break;
+  case 5:
+    dialogueBox.textContent = '🧙‍♂️ Peppino: Orienta i Guardiani come vuole la brezza. Solo allora, la collana sarà tua.';
+    isWizardTalking = true;
+    break;
+  default:
+    dialogueBox.style.display = 'none';
+    dialogueStep = 0;
+    isWizardTalking = false;
+    return;
+}
+dialogueBox.style.display = 'block';
+
 }
     }
   }
