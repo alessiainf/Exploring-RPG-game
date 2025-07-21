@@ -49,8 +49,13 @@ import {
 
 // === SCENA, CAMERA, RENDERER ===
 const scene = new THREE.Scene();
-scene.background = new THREE.Color(0x87ceeb);
-scene.fog = new THREE.Fog(0xaaaaaa, 10, 50);
+//scene.background = new THREE.Color(0x87ceeb);
+//scene.fog = new THREE.Fog(0xaaaaaa, 10, 50);
+scene.background = new THREE.Color(0x8e80aa);
+//scene.fog = new THREE.Fog(0x8a2be2, 20, 60); // Viola (BlueViolet)
+
+
+
 const clock = new THREE.Clock();
 
 const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 1, 500);
@@ -257,6 +262,7 @@ window.addEventListener('keydown', (event) => {
 });
 
 
+
 // === ANIMATE LOOP ===
 function animate(time) {
     requestAnimationFrame(animate);
@@ -439,12 +445,12 @@ window.addEventListener('keydown', (event) => {
 });
 
 // === AVVIO ===
-/*
-init().then(() => {
-    animate();
-});
-*/
 
-new IntroManager(() => {
-  init().then(() => animate());
+init().then(() => {
+   animate();
 });
+
+
+//new IntroManager(() => {
+// init().then(() => animate());
+//});

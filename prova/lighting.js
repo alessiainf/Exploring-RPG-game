@@ -1,36 +1,47 @@
 // lighting.js
 import * as THREE from 'three';
 
+let currentLights = null;
+
 export function setupLights(scene) {
-  const directionalLight = new THREE.DirectionalLight(0xffffff, 5);
-  directionalLight.position.set(5, 10, 5);
+  // Luce ambientale viola/blu soft
+const ambientLight = new THREE.AmbientLight(0x554477, 0.5); 
+ // viola profondo e meno intenso
+
+
+  // Luce direzionale più morbida, con ombre se necessario
+const directionalLight = new THREE.DirectionalLight(0xaa88ff, 1.0);
+directionalLight.position.set(-30, 80, 10);
+directionalLight.target.position.set(12, 0, -3); 
+scene.add(directionalLight.target);
+
+//const helper = new THREE.CameraHelper(directionalLight.shadow.camera);
+//scene.add(helper);
+
   directionalLight.castShadow = true;
 
   directionalLight.shadow.mapSize.set(4096, 4096);
-  directionalLight.shadow.camera.near = 0.5;
-  directionalLight.shadow.camera.far = 100;
-  directionalLight.shadow.camera.left = -50;
-  directionalLight.shadow.camera.right = 50;
-  directionalLight.shadow.camera.top = 50;
-  directionalLight.shadow.camera.bottom = -50;
+  directionalLight.shadow.camera.near = 1;
+  directionalLight.shadow.camera.far = 150;
+  directionalLight.shadow.camera.left = -150;
+  directionalLight.shadow.camera.right = 150;
+  directionalLight.shadow.camera.top = 150;
+  directionalLight.shadow.camera.bottom = -150;
+  directionalLight.shadow.bias = -0.0001;  
+  directionalLight.shadow.radius = 0; 
 
-  const ambientLight = new THREE.AmbientLight(0xffffff, 1.5);
-
-  scene.add(directionalLight);
   scene.add(ambientLight);
+  scene.add(directionalLight);
 
   currentLights = {
-    directionalLight,
-    ambientLight
+    ambientLight,
+    directionalLight
   };
 
   return currentLights;
 }
 
 
-let currentLights = null;
-
 export function getLights() {
   return currentLights;
 }
-

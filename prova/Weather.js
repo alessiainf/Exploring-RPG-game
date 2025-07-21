@@ -12,6 +12,8 @@ let clearingT = 0;
 const clearingSpeed = 0.01; // velocità di dissolvenza
 let mystZoneT = 0; // 0 = fuori dalla nebbia, 1 = nebbia piena
 const mystZoneSpeed = 0.010; // Velocità di apparizione/scomparsa
+let wizardFogMesh;
+let wizardFogMaterial;
 
 
 //bee game
@@ -32,11 +34,24 @@ const FUNGUS_ZONE_RADIUS = 15;
 
 
 export function initWeather(scene) {
-  fog = new THREE.Fog(0xaaaaaa, 10, 60); 
+  fog = new THREE.Fog(0x8e80aa, 50, 180); 
+
   scene.fog = fog;
+
+  // Mesh semitrasparente per simulare nebbia grigia densa attorno al mago
+  const wizardFogGeo = new THREE.SphereGeometry(20, 32, 32);
+  wizardFogMaterial = new THREE.MeshBasicMaterial({
+    color: 0x3a3a40,
+    transparent: true,
+    opacity: 0.5,
+    depthWrite: false
+  });
+  wizardFogMesh = new THREE.Mesh(wizardFogGeo, wizardFogMaterial);
+  wizardFogMesh.position.set(0, 0, 0); // lo riposizioniamo ogni frame
+  scene.add(wizardFogMesh);
 }
 
-export function updateWeather(playerPosition) {
+export function updateWeather(playerPosition) { 
 
   //Statue game
   if (!wizard || !fog) return;
@@ -45,12 +60,12 @@ export function updateWeather(playerPosition) {
   const distToWizard = playerPosition.distanceTo(wizard.position);
   const fogZoneRadius = 20;
 
-  // Valori della nebbia globale (base)
+  // Valori della nebbia globale 
   const baseNear = 15;
-  const baseFar = 100;
+  const baseFar = 110;
 
   // Valori per la nebbia fitta vicino al mago
-  const denseNear = 2;
+  const denseNear = 1;
   const denseFar = 30;
 
   if (statuesCorrect) {
@@ -68,9 +83,17 @@ export function updateWeather(playerPosition) {
     mystZoneT = THREE.MathUtils.clamp(mystZoneT - mystZoneSpeed, 0, 1);
   }
 
-  // Transizione finale: da fitta → leggera → globale
-  const t = THREE.MathUtils.lerp(0, 1, clearingT);
-  const mixT = mystZoneT * (1 - t);  // se clearingT → 1, allora mixT → 0
+// Gestione intensità della cupola grigia intorno al mago
+const t = THREE.MathUtils.lerp(0, 1, clearingT);
+const mixT = mystZoneT * (1 - t); // 1 = nebbia grigia piena, 0 = dissolta
+
+wizardFogMaterial.opacity = THREE.MathUtils.lerp(0.5, 0.0, 1 - mixT);
+
+// Rendi la cupola visibile e posizionala sul mago
+wizardFogMesh.visible = mixT > 0.01;
+wizardFogMesh.position.copy(wizard.position);
+
+
 
   // Interpola near/far nebbia
   fog.near = THREE.MathUtils.lerp(baseNear, denseNear, mixT);

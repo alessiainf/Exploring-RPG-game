@@ -35,6 +35,14 @@ export async function loadWorld(scene) {
           child.castShadow = true;
           child.receiveShadow = true;
         }
+        if (!(child.material instanceof THREE.MeshStandardMaterial)) {
+      child.material = new THREE.MeshStandardMaterial({
+        color: child.material?.color ?? new THREE.Color(0x888888),
+        roughness: 1,
+        metalness: 0,
+        fog: true
+      });
+    }
         
         // Identifica il terreno
         if (child.name.toLowerCase().includes("plane")) {
@@ -224,6 +232,7 @@ export function addProceduralFloor(scene, size = 300, segments = 30) {
     color: 0x3C7626, // verde oliva scuro
     roughness: 1,
     metalness: 0,
+    fog: true
   });
 
   // === CREAZIONE DEL PAVIMENTO ===
@@ -237,6 +246,8 @@ export function addProceduralFloor(scene, size = 300, segments = 30) {
       floorGroup.add(tile);
     }
   }
+  
+
 
   scene.add(floorGroup);
 
