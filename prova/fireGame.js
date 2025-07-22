@@ -3,6 +3,9 @@ import { collectItem, hasCollectedAll } from './GameState.js';
 import { keys } from './InputManager.js';
 import { promptState } from './main.js';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+import { Reflector } from 'three/examples/jsm/objects/Reflector.js';
+
+
 const gltfLoader = new GLTFLoader();
 
 
@@ -11,9 +14,10 @@ let firesLit = [false, false, false];
 let fireParticles = [[], [], []];  
 let fireflies = [];
 let fireflyClock = new THREE.Clock();
-let magicDoor = null;
 let doorVisible = false;
 let gameFinished = false;
+let mirrorPortale = null; // nuovo oggetto mirror
+
 const cauldronModels = [
   { url: 'assets/models/Honey.glb', scale: 1.2 },
   { url: 'assets/models/Tentacle.glb', scale: 1.5 },
@@ -50,14 +54,19 @@ export function createCauldrons(scene) {
   }
 
   // Hidden door
-  magicDoor = new THREE.Mesh(
-    new THREE.BoxGeometry(1.5, 3, 0.1),
-    new THREE.MeshStandardMaterial({ color: 0x00ffff, transparent: true, opacity: 0 })
-  );
-  magicDoor.position.set(52, 1, -1);
-  magicDoor.rotation.y = Math.PI / 2;
-  magicDoor.visible = false;
-  scene.add(magicDoor);
+// Hidden door → Mirror portal
+const mirrorGeometry = new THREE.PlaneGeometry(1.5, 3);
+mirrorPortale = new Reflector(mirrorGeometry, {
+  clipBias: 0.003,
+  textureWidth: window.innerWidth * window.devicePixelRatio,
+  textureHeight: window.innerHeight * window.devicePixelRatio,
+  color: 0x222244,
+});
+mirrorPortale.position.set(52, 1, -1);
+mirrorPortale.rotation.y = Math.PI / 2;
+mirrorPortale.visible = false;
+scene.add(mirrorPortale);
+
 }
 
 export function updateCauldronInteraction(playerPosition) {
@@ -166,7 +175,7 @@ function triggerFinalSequence(scene) {
   cauldrons.forEach(c => start.add(c.position));
   start.divideScalar(cauldrons.length);
 
-  const end = magicDoor.position.clone();
+  const end = mirrorPortale.position.clone();  
 
   const steps = 100;
 for (let i = 0; i < steps; i++) {
@@ -200,7 +209,7 @@ for (let i = 0; i < steps; i++) {
 
 
   // Rendi la porta visibile
-  magicDoor.visible = true;
+  mirrorPortale.visible = true;
   doorVisible = true;
 }
 
@@ -245,16 +254,21 @@ export function updateFireEffects() {
 
 
   // Door fade-in
-  if (magicDoor && doorVisible && magicDoor.material.opacity < 1.0) {
-    magicDoor.material.opacity += 0.01;
+  if (mirrorPortale && doorVisible && mirrorPortale.material.opacity < 1.0) {
+    mirrorPortale.material.opacity += 0.01;
   }
 }
 
 
 export function checkDoorCollision(playerPosition) {
   if (!doorVisible || gameFinished) return;
-  const distance = playerPosition.distanceTo(magicDoor.position);
-  if (distance < 1.5) {
+  const distance = playerPosition.distanceTo(mirrorPortale.position);
+if (distance < 1.5 && !gameFinished) {
+  promptState.active = true;
+  promptState.text = '✨ Premi F per attraversare lo specchio';
+
+  if (keys.fPressed) {
+    keys.fPressed = false;
     gameFinished = true;
 
     // 🕳️ Overlay nero con fade-in
@@ -284,15 +298,20 @@ export function checkDoorCollision(playerPosition) {
 
     setTimeout(() => {
       overlay.style.opacity = '1';
-    }, 100); // fade-in leggero
+    }, 100);
 
     // Testo finale narrativo
     const text = document.createElement('div');
-    text.innerText = 'Sei fuggito dal mondo delle Nebbie!\n\nMa le cicatrici della magia oscura non svaniscono.\nLa tua avventura nel mondo delle Ombre è appena cominciata...';
+    text.innerText =
+    'Sei fuggito dal mondo delle nebbie\n' +
+    'ma ciò che hai lasciato dietro non è più il mondo che conoscevi.\n\n' +
+    'Forse non sei fuggito...\n' +
+    'forse hai solo cambiato lato dello specchio.\n' +
+    'La tua avventura nei mondi paralleli è appena cominciata.';
+
     text.style.fontSize = '36px';
     text.style.lineHeight = '1.6';
     text.style.textShadow = '2px 2px 8px #000000';
-
     text.style.textAlign = 'center';
     text.style.whiteSpace = 'pre-line';
     text.style.maxWidth = '80%';
@@ -313,5 +332,5 @@ export function checkDoorCollision(playerPosition) {
     button.onclick = () => window.location.reload();
     overlay.appendChild(button);
   }
-
+}
 }

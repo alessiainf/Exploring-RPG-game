@@ -79,7 +79,7 @@ export function updateBookInteraction(playerPosition) {
 
       if (dialogueBox.style.display === 'none' || dialogueBox.style.display === '') {
         // Mostra istruzioni
-        dialogueBox.innerHTML = `"🧾 Chiunque voglia fuggire da queste Terre Velate, dovrà risvegliare l’antico Portale.
+        dialogueBox.innerHTML = `"🧾 Chiunque voglia fuggire da queste Terre Velate, dovrà risvegliare l’antico Specchio, portale tra i mondi.
           Per farlo devi offrire agli altari a Nord tre Doni perduti nel tempo:<br>
           🔮 <b>La Collana del Vento</b>.<br>
           🍯 <b>Il Miele Dorato</b>.<br>

@@ -445,11 +445,11 @@ window.addEventListener('keydown', (event) => {
 });
 
 // === AVVIO ===
-init().then(() => {
-   animate();
-});
-
-
-//new IntroManager(() => {
-// init().then(() => animate());
+//init().then(() => {
+//   animate();
 //});
+
+
+new IntroManager(() => {
+ init().then(() => animate());
+});

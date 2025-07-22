@@ -21,7 +21,7 @@ let dandelionParticles = [];
 let dandelionGroup = new THREE.Group();
 let dandelionsInitialized = false;
 let beeZoneCenter = new THREE.Vector3();  // da impostare esplicitamente
-const DANDELION_ZONE_RADIUS = 35;
+const DANDELION_ZONE_RADIUS = 70;
 
 // Mushroom game
 let sporeParticles = [];
@@ -120,13 +120,17 @@ wizardFogMesh.position.copy(wizard.position);
         p.position.x += (Math.random() - 0.5) * 0.002;
         p.position.z += (Math.random() - 0.5) * 0.002;
 
-        if (p.position.distanceTo(beeZoneCenter) > DANDELION_ZONE_RADIUS) {
-          p.position.set(
-            beeZoneCenter.x + (Math.random() - 0.5) * 2 * DANDELION_ZONE_RADIUS,
-            beeZoneCenter.y + Math.random() * 3,
-            beeZoneCenter.z + (Math.random() - 0.5) * 2 * DANDELION_ZONE_RADIUS
-          );
-        }
+        // Altezza massima oltre cui rigenerare
+const MAX_FLUFF_HEIGHT = 10;
+
+if (p.position.y > MAX_FLUFF_HEIGHT) {
+  p.position.set(
+    (Math.random() - 0.5) * 50,  // X random su tutta la mappa
+    1 + Math.random() * 2,        // Y vicino al suolo
+    (Math.random() - 0.5) * 50   // Z random su tutta la mappa
+  );
+}
+
       }
     
   }
@@ -162,11 +166,11 @@ wizardFogMesh.position.copy(wizard.position);
 }
 
 
-export function initDandelions(scene, center, count = 250) {
+export function initDandelions(scene, center, count = 400) {
   if (dandelionsInitialized) return;
   beeZoneCenter.copy(center);
 
-  const geometry = new THREE.SphereGeometry(0.05, 3, 3);
+  const geometry = new THREE.SphereGeometry(0.03, 3, 3);
   const material = new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.8 });
 
   for (let i = 0; i < count; i++) {
