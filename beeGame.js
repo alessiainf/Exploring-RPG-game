@@ -296,7 +296,7 @@ function showBeeDialogueLine(scene) {
     text = '🐝 Rinnah: Ecco la sfida: raccogli i 5 nettari sparsi nella radura in 30 secondi. Se ci riesci, potrei... *forse*... darti una goccia del mio miele.';
     break;
   case 7:
-    text = '🐝 Rinnah: Bene, accetti la sfida o te ne torni dalle tue margheritine?';
+    text = '🐝 Rinnah: Bene, accetti la sfida?';
 
 
       const btnYes = document.createElement('button');
