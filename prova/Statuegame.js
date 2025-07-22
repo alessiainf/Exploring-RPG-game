@@ -96,12 +96,6 @@ export async function loadWizard(scene) {
 
     });
 
-    wizard.traverse(child => {
-  if (child.isBone) {
-    console.log('Bone name:', child.name);
-  }
-});
-
 
     // Aggiungi collider per il mago 
     setupWizardPhysics();
@@ -353,7 +347,7 @@ export function updateInteraction(playerPosition, scene) {
 
 if (checkStatueOrientations() && !thankedPlayer) {
   // Le statue sono corrette e non abbiamo ancora ringraziato
-  dialogueBox.textContent = '🧙‍♂️ Peppino: Grazie, avventuriero. Il tuo gesto non sarà dimenticato.';
+  dialogueBox.textContent = '🛡️ Peppino: Grazie. Il tuo gesto non sarà dimenticato.';
   dialogueBox.style.display = 'block';
   isWizardTalking = true;
   thankedPlayer = true;
@@ -368,23 +362,23 @@ if (checkStatueOrientations() && !thankedPlayer) {
 dialogueStep++;
 switch (dialogueStep) {
   case 1:
-    dialogueBox.textContent = '🧙‍♂️ Mago: ...Un’anima persa tra le nebbie? Non è comune vedere viandanti qui.';
+    dialogueBox.textContent = '🛡️ Guardiano: ...Un’anima persa tra le nebbie? Non è comune vedere viandanti qui.';
     isWizardTalking = true;
     break;
   case 2:
-    dialogueBox.textContent = '🧝‍♂️ Avventuriero: Cerco una via d’uscita. Sono alla ricerca della Collana del Vento.';
+    dialogueBox.textContent = '🧙‍♀️ Strega: Cerco una via d’uscita. Sono alla ricerca della Collana del Vento.';
     isWizardTalking = false;
     break;
   case 3:
-    dialogueBox.textContent = '🧙‍♂️ Peppino: È un oggetto antico, legato a forze dimenticate. Io sono Peppino, guardiano di ciò che resta.';
+    dialogueBox.textContent = '🛡️ Peppino: È un oggetto antico, legato a forze dimenticate. Io sono Peppino, guardiano di ciò che resta.';
     isWizardTalking = true;
     break;
   case 4:
-    dialogueBox.textContent = '🧙‍♂️ Peppino: Ma non tutto si conquista con la forza. I Venti devono tornare a parlare prima.';
+    dialogueBox.textContent = '🛡️ Peppino: Ma non tutto si conquista con la forza. I Venti devono tornare a parlare prima.';
     isWizardTalking = true;
     break;
   case 5:
-    dialogueBox.textContent = '🧙‍♂️ Peppino: Orienta i Guardiani come vuole la brezza. Solo allora, la collana sarà tua.';
+    dialogueBox.textContent = '🛡️ Peppino: Orienta i Guardiani come vuole la brezza. Solo allora, la collana sarà tua.';
     isWizardTalking = true;
     break;
   default:
@@ -416,7 +410,7 @@ if (!dialogueVisible) {
     promptState.text = '📜 Premi F per leggere l\'incisione';
   } else if (nearWizard) {
     promptState.active = true;
-    promptState.text = '🧙 Premi F per parlare con il mago';
+    promptState.text = '🧙 Premi F per parlare con il guardiano';
   }
 }
 

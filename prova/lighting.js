@@ -22,11 +22,11 @@ scene.add(directionalLight.target);
 
   directionalLight.shadow.mapSize.set(4096, 4096);
   directionalLight.shadow.camera.near = 1;
-  directionalLight.shadow.camera.far = 150;
-  directionalLight.shadow.camera.left = -150;
-  directionalLight.shadow.camera.right = 150;
-  directionalLight.shadow.camera.top = 150;
-  directionalLight.shadow.camera.bottom = -150;
+  directionalLight.shadow.camera.far = 140;
+  directionalLight.shadow.camera.left = -140;
+  directionalLight.shadow.camera.right = 140;
+  directionalLight.shadow.camera.top = 140;
+  directionalLight.shadow.camera.bottom = -140;
   directionalLight.shadow.bias = -0.0001;  
   directionalLight.shadow.radius = 0; 
 

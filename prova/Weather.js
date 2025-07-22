@@ -196,7 +196,7 @@ export function initSpores(scene, center, count = 150) {
   if (sporesInitialized) return;
   fungusZoneCenter.copy(center);
 
-  const geometry = new THREE.SphereGeometry(0.04, 6, 6);
+  const geometry = new THREE.SphereGeometry(0.02, 3, 3);
   const material = new THREE.MeshBasicMaterial({
     color: 0x88ccff,
     transparent: true,

@@ -7,8 +7,8 @@ export class ThirdPersonCamera {
     this.target = target;
     
     // Configurazione telecamera
-    this.distance = 8;
-    this.height = 4;
+    this.distance = 6;
+    this.height = 3;
     this.rotationSpeed = 0.003;
     this.followSpeed = 0.1;
     this.heightOffset = 2;

@@ -58,8 +58,8 @@ scene.background = new THREE.Color(0x8e80aa);
 
 const clock = new THREE.Clock();
 
-const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 1, 500);
-camera.position.set(0, 3, -6);
+const camera = new THREE.PerspectiveCamera(40, window.innerWidth / window.innerHeight, 1, 500);
+//camera.position.set(0, 3, -6);
 
 const renderer = new THREE.WebGLRenderer({ antialias: true });
 renderer.setSize(window.innerWidth, window.innerHeight);
@@ -445,7 +445,6 @@ window.addEventListener('keydown', (event) => {
 });
 
 // === AVVIO ===
-
 init().then(() => {
    animate();
 });

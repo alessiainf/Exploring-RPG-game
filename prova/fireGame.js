@@ -54,7 +54,8 @@ export function createCauldrons(scene) {
     new THREE.BoxGeometry(1.5, 3, 0.1),
     new THREE.MeshStandardMaterial({ color: 0x00ffff, transparent: true, opacity: 0 })
   );
-  magicDoor.position.set(58, 1.5, 27);
+  magicDoor.position.set(52, 1, -1);
+  magicDoor.rotation.y = Math.PI / 2;
   magicDoor.visible = false;
   scene.add(magicDoor);
 }
@@ -207,7 +208,7 @@ for (let i = 0; i < steps; i++) {
 export function updateFireEffects() {
   const delta = fireflyClock.getDelta();
 
-  // 🔥 Update sprite flames
+  // Update sprite flames
   for (let i = 0; i < fireParticles.length; i++) {
     const sprites = fireParticles[i];
     if (!sprites || sprites.length === 0) continue;
@@ -263,7 +264,11 @@ export function checkDoorCollision(playerPosition) {
     overlay.style.left = '0';
     overlay.style.width = '100vw';
     overlay.style.height = '100vh';
-    overlay.style.backgroundColor = 'black';
+    overlay.style.backgroundImage = 'url("assets/images/end.png")';
+    overlay.style.backgroundSize = 'cover';
+    overlay.style.backgroundPosition = 'center';
+    overlay.style.backgroundRepeat = 'no-repeat';
+
     overlay.style.zIndex = '999';
     overlay.style.display = 'flex';
     overlay.style.flexDirection = 'column';
@@ -284,7 +289,10 @@ export function checkDoorCollision(playerPosition) {
     // Testo finale narrativo
     const text = document.createElement('div');
     text.innerText = 'Sei fuggito dal mondo delle Nebbie!\n\nMa le cicatrici della magia oscura non svaniscono.\nLa tua avventura nel mondo delle Ombre è appena cominciata...';
-    text.style.fontSize = '32px';
+    text.style.fontSize = '36px';
+    text.style.lineHeight = '1.6';
+    text.style.textShadow = '2px 2px 8px #000000';
+
     text.style.textAlign = 'center';
     text.style.whiteSpace = 'pre-line';
     text.style.maxWidth = '80%';

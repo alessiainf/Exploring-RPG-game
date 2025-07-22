@@ -13,7 +13,7 @@ let beeMixer;
 let challengeStarted = false;
 let challengeCompleted = false;
 let timer = 0;
-let maxTime = 30;
+let maxTime = 20;
 let activeItems = [];
 let beeTalked = false;
 let inDialogue = false;
@@ -85,12 +85,15 @@ export async function loadBeeGame(scene) {
   timerBox.style.top = '8%';
   timerBox.style.left = '50%';
   timerBox.style.transform = 'translateX(-50%)';
-  timerBox.style.color = 'white';
-  timerBox.style.fontSize = '40px';
+  timerBox.style.color = '#ffffff';
+  timerBox.style.fontSize = '50px';
   timerBox.style.fontWeight = 'bold';
-  timerBox.style.backgroundColor = 'rgba(0, 0, 0, 0.7)';
+  timerBox.style.backgroundColor = 'rgba(0, 0, 0, 0.75)';
   timerBox.style.padding = '16px 24px';
+  timerBox.style.border = '2px solid #ffcc00';
   timerBox.style.borderRadius = '12px';
+  timerBox.style.textShadow = '2px 2px 4px #000';
+  timerBox.style.boxShadow = '0 0 10px #ffcc00aa';
   timerBox.style.display = 'none';
   timerBox.style.zIndex = '1000';
   document.body.appendChild(timerBox);
@@ -103,7 +106,7 @@ export async function loadBeeGame(scene) {
   counterBox.style.left = '50%';
   counterBox.style.transform = 'translateX(-50%)';
   counterBox.style.color = '#ffcc00';
-  counterBox.style.fontSize = '30px';
+  counterBox.style.fontSize = '40px';
   counterBox.style.fontWeight = 'bold';
   counterBox.style.backgroundColor = 'rgba(0, 0, 0, 0.7)';
   counterBox.style.padding = '12px 20px';
@@ -272,7 +275,7 @@ function showBeeDialogueLine(scene) {
 
   switch (dialogueStep) {
   case 0:
-    text = '🧝‍♂️ Avventuriero: Un\'ape! Perfetto, magari ha del miele...';
+    text = '🧙‍♀️ Strega: Un\'ape! Perfetto, magari ha del miele...';
     break;
   case 1:
     text = '🐝 Ape: Zzzzz... EH?! Chi osa disturbarmi?! Oh, un altro bipede...';
@@ -281,7 +284,7 @@ function showBeeDialogueLine(scene) {
     text = '🐝 Ape: Lascia che indovini: vuoi il Miele Dorato! Tutti lo vogliono. Nessuno lo merita!';
     break;
   case 3:
-    text = '🧝‍♂️ Avventuriero: Non voglio litigare, ma sono disposto a tutto per quel miele.';
+    text = '🧙‍♀️ Strega: Non voglio litigare, ma sono disposto a tutto per quel miele.';
     break;
   case 4:
     text = '🐝 Rinnah: Io sono Rinnah, Regina della Radura, Protrettrice del Nettare! E no, non lo do a chiunque!';

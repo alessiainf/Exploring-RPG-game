@@ -29,7 +29,7 @@ export class CharacterController {
         this.characterRadius = 0.3;
         this.groundCheckDistance = 0.1;
         this.moveSpeed = 4; // Velocità di camminata
-        this.runSpeedMultiplier = 2; // Moltiplicatore per la corsa
+        this.runSpeedMultiplier = 4; // Moltiplicatore per la corsa
         this.rotationSpeed = 0.1; // Velocità di rotazione del personaggio
 
         // Visualizzazione debug

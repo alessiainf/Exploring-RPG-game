@@ -266,7 +266,7 @@ function showDialogueLine() {
 
   switch (dialogueStep) {
     case 0:
-      text = '🧝‍♀️ Avventuriero: ...Siete tre funghi impilati sotto un trench?!';
+      text = '🧙‍♀️ Strega: ...Siete tre funghi impilati sotto un trench?!';
       break;
     case 1:
       text = '🍄???: SILENZIO! Noi siamo... IL FUNGONE!';
@@ -291,7 +291,7 @@ function showDialogueLine() {
       armsActive = true;
       break;
     case 5:
-      text = '🧝‍♀️ Avventuriero: Be io avrei proprio bisogno di un tentacolo.';
+      text = '🧙‍♀️ Strega: Be io avrei proprio bisogno di un tentacolo.';
       armsActive = false;
       break;
     case 6:
