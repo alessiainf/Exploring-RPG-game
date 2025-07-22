@@ -1,10 +1,7 @@
-# Exploring RPG Game
+# A Lost Witch Tale
 
-**A Lost Witch Tale** is a fantasy exploration experience built with Three.js.  
-You are a young witch, lost in an enchanted forest.  
-To return home, you must find three magical items—  
-each guarded by a mysterious puzzle.  
-Collect them all to uncover the hidden path that leads back to your world.
+**A Lost Witch Tale** is a fantasy exploration experience built with Three.js and Rapier.js.  
+You are a young witch, lost in an enchanted forest. To return home, you must find three magical items, each guarded by a mysterious puzzle.  
 
 ---
 
@@ -14,7 +11,8 @@ A curious young witch, drawn to forbidden magic, made a terrible mistake.
 
 A spell went wrong. She was pulled into a mysterious forest.
 
-Now, she must find a way back home...
+Now, she must find a way to return...
+
 ---
 
 ## Controls
@@ -25,8 +23,8 @@ Now, she must find a way back home...
 | `Shift`    | Run               |
 | `F`        | Interact (talk, pick up, activate) |
 | `Mouse`    | Look around       |
-| `9`    | show world wireframes       |
-| `P`    | show character wireframe       |
+| `9`    | Show world wireframes       |
+| `P`    | Show character wireframe       |
 
 ---
 
@@ -40,6 +38,10 @@ Here are a few glimpses from inside the game world:
 
 
 ---
+
+## Acknowledgments
+Special thanks to **Quaternius** for making all 3D models freely available on [Poly Pizza](https://poly.pizza/u/Quaternius).  
+All the assets used in this project come from his incredible collection.
 
 ## Notes
 
