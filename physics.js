@@ -1,4 +1,5 @@
-import RAPIER from 'https://cdn.skypack.dev/@dimforge/rapier3d-compat';
+import RAPIER from 'https://cdn.skypack.dev/@dimforge/rapier3d-compat@0.17.0';
+
 import * as THREE from 'three';
 
 // Esporta RAPIER per l'uso in altri moduli
