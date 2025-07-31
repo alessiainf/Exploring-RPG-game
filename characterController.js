@@ -5,22 +5,23 @@ import { physicsWorld, RAPIER } from './physics.js';
 
 export class CharacterController {
     constructor(scene, camera, controls) {
+
         this.scene = scene;
         this.camera = camera;
         this.controls = controls;
-
         this.clock = new THREE.Clock();
         this.mixer = null;
         this.player = null;
+        this.modelOffsetY = 0;
+        this.frozen = false;
+        this.thirdPersonCamera = null;
+
+        //Animazioni
         this.walkAction = null;
         this.runAction = null;
         this.idleAction = null;
         this.currentAction = null;
         this.chestBone = null;
-        this.modelOffsetY = 0;
-        this.frozen = false;
-
-        this.thirdPersonCamera = null;
 
         // Proprietà fisiche
         this.rigidBody = null;
@@ -75,7 +76,7 @@ export class CharacterController {
             });
             model.rotation.y = Math.PI/2; 
 
-
+            //crea un mixer per riprodurre le animazioni
             this.mixer = new THREE.AnimationMixer(model);
 
             this.walkAction = THREE.AnimationClip.findByName(gltf.animations, 'CharacterArmature|Walk')
@@ -97,14 +98,15 @@ export class CharacterController {
                 this.walkAction.play();
                 this.currentAction = this.walkAction;
             }
-
+            
+            //serve per animare respirazione
             this.chestBone = model.getObjectByName('Chest');
 
+            //ottengo le dimensioni del bounding box del personaggio
+            //per creare il collider fisico
             const box = new THREE.Box3().setFromObject(model);
-
             const size = box.getSize(new THREE.Vector3());
             const minY = box.min.y;
-
             this.modelOffsetY = -minY;
             this.characterHeight = size.y * 0.9;
             this.characterRadius = Math.max(size.x, size.z) * 0.4;
@@ -112,18 +114,19 @@ export class CharacterController {
             model.position.set(0, this.modelOffsetY, 0);
             this.scene.add(model);
 
+            //crea la fisica del personaggio
             this.createPhysicsBody();
             this.createDebugWireframe();
 
+            //crea la telecamera in terza persona
             this.thirdPersonCamera = new ThirdPersonCamera(this.camera, this.player);
 
             if (this.controls) {
                 this.controls.enabled = false;
             }
 
+            //attiva gli eventi tastiera
             this.addEventListeners();
-            //console.log('Character loaded with physics');
-            //console.log(`Height: ${this.characterHeight.toFixed(2)}, Radius: ${this.characterRadius.toFixed(2)}`);
         });
     }
 
@@ -133,6 +136,7 @@ export class CharacterController {
             return;
         }
 
+        //create a capsule for character collider
         try {
             const halfHeight = this.characterHeight * 0.5 - this.characterRadius
             const colliderDesc = RAPIER.ColliderDesc.capsule(
@@ -141,14 +145,12 @@ export class CharacterController {
             );
             
             const totalHeight = this.characterHeight;
-
-
             colliderDesc.setFriction(0.1);
             colliderDesc.setRestitution(0.0);
             colliderDesc.setDensity(1.0);
 
             //it's a kinematic body, so it won't be affected by forces but can move
-            //i will control the forces
+            //può essere mosso manulamente con "setNextKinematicTranslation(...)"
             const rigidBodyDesc = RAPIER.RigidBodyDesc.kinematicPositionBased();
             
             //start game
@@ -163,22 +165,19 @@ export class CharacterController {
     
             //bee game
             //const startPosition = { x: 20, y: totalHeight * 0.47, z: 36 };
-            
             rigidBodyDesc.setTranslation(startPosition.x, startPosition.y, startPosition.z);
-
             rigidBodyDesc.lockRotations(true, false, true);
 
-            //added to psysicsWorld
+            //Aggiungo al mondo fisico il kinematicbody e il collider (assegnato al kinematic body)
             this.rigidBody = physicsWorld.world.createRigidBody(rigidBodyDesc);
             this.collider = physicsWorld.world.createCollider(colliderDesc, this.rigidBody);
 
             this.rigidBody.setLinearDamping(5.0);
             this.rigidBody.setAngularDamping(10.0);
 
-            //used to allign the model with the physics body during movement
+            //used to allign the model-mesh with the physics body during movement
             this.updatePhysicsPosition();
 
-            //console.log('Character physics body created');
         } catch (error) {
             console.error('Error creating character physics body:', error);
         }
@@ -234,10 +233,7 @@ export class CharacterController {
 
         this.debugWireframe = group;
         this.scene.add(this.debugWireframe);
-
-        //console.log('Debug wireframe created');
     }
-
     updateDebugWireframe() {
         if (!this.debugWireframe || !this.rigidBody) return;
 
@@ -253,83 +249,70 @@ export class CharacterController {
             this.debugWireframe.visible = false;
         }
     }
-
     toggleWireframe() {
         this.showWireframe = !this.showWireframe;
-        //console.log('Wireframe:', this.showWireframe ? 'ON' : 'OFF');
     }
 
-    // Aggiorna la posizione del modello in base alla fisica
+    // Sincronizza la mesh del personaggio con il corpo fisico
     // Questa funzione viene chiamata ad ogni frame per sincronizzare la posizione del modello con quella
     // del corpo fisico.
     updatePhysicsPosition() {
         if (!this.rigidBody || !this.player) return;
 
-        //computee the position of the physics body
+        //Obtain the position of the physics body
         const position = this.rigidBody.translation();
         this.physicsPosition.set(position.x, position.y, position.z);
 
-       // const rotation = this.rigidBody.rotation();
-       // this.physicsRotation.set(rotation.x, rotation.y, rotation.z, rotation.w);
-
-        //computee the position of the model
+        //Copy this position in visualPosition
         this.visualPosition.copy(this.physicsPosition);
+
+        //posiziono meglio la capsula per allinarla con il corpo
         this.visualPosition.y -= (this.characterHeight * 0.4 + this.characterRadius);
         this.visualPosition.y += this.modelOffsetY;;
 
-        // Update the player's position to match the physics position
+        //update the model position with the physic position
         this.player.position.copy(this.visualPosition);
     }
 
+    //Serve per fare shape casting, è una collisione predittiva per evitare
+    //che il personaggio attraversi gli ostacoli
+    checkFutureCollision(targetPosition) {
+        if (!this.rigidBody) return null;
 
-checkFutureCollision(targetPosition) {
-    if (!this.rigidBody) return null;
+        // Calcola quanto il personaggio si sposterà tra posizione attuale e destinazione desiderata
+        const currentPos = this.rigidBody.translation();
+        const movement = {
+            x: targetPosition.x - currentPos.x,
+            y: targetPosition.y - currentPos.y,
+            z: targetPosition.z - currentPos.z
+        };
 
-    const currentPos = this.rigidBody.translation();
-    const movement = {
-        x: targetPosition.x - currentPos.x,
-        y: targetPosition.y - currentPos.y,
-        z: targetPosition.z - currentPos.z
-    };
+        //crea una capsule fittizia per vedere se collide con gli oggetti
+        const shape = new RAPIER.Capsule(this.characterHeight * 0.4, this.characterRadius);
 
-    const shape = new RAPIER.Capsule(this.characterHeight * 0.4, this.characterRadius);
+        // fa un cast shape della shape e dice se incontrerà qualcosa nel tragitto
+        const hit = physicsWorld.world.castShape(
+            currentPos,
+            { x: 0, y: 0, z: 0, w: 1 },
+            movement,
+            shape,
+            0.1,
+            true
+        );
 
-    const hit = physicsWorld.world.castShape(
-        currentPos,
-        { x: 0, y: 0, z: 0, w: 1 },
-        movement,
-        shape,
-        //uso il teorema di pitagora per calcolare la distanza effettiva del movimento
-        //Math.sqrt(movement.x ** 2 + movement.y ** 2 + movement.z ** 2),
-        0.1,
-        true
-    );
-
-    if (hit) {
-        // Escludi collisione con sé stesso
-        if (hit.collider.handle === this.rigidBody.collider(0).handle) {
-            return null;
+        if (hit) {
+            // Escludi collisione con sé stesso
+            if (hit.collider.handle === this.rigidBody.collider(0).handle) {
+                return null;
+            }
+            const mesh = physicsWorld.bodyToMesh.get(hit.collider);
+            // Escludi collisione con il plane
+            if (mesh && mesh.name === 'Plane') {
+                return null;
+            }
         }
-
-        const mesh = physicsWorld.bodyToMesh.get(hit.collider);
-        if (mesh && mesh.name === 'Plane') {
-            return null;
-        }
-        
+        return hit;
     }
-
-    return hit;
-}
-
-
-//usato per settare la posizione del personaggio per debug
-setPosition(x, y, z) {
-    if (this.rigidBody) {
-        this.rigidBody.setTranslation({ x: x, y: y + this.characterHeight * 0.5, z: z }, true);
-        this.updatePhysicsPosition();
-    }
-}
-
 
 
     addEventListeners() {
@@ -356,15 +339,19 @@ setPosition(x, y, z) {
         });
     }
 
+    //Function used to update at each frame
     update(deltaTime) {
         const delta = this.clock.getDelta();
         if (this.frozen) return;
 
+        //Aggiorna animazioni
         if (this.mixer) this.mixer.update(delta);
 
-        this.handleMovement(deltaTime); // Gestisce il movimento e la rotazione del modello
+        // Gestisce il movimento e la rotazione del modello
+        this.handleMovement(deltaTime); 
 
-        this.updatePhysicsPosition(); // Aggiorna la posizione del modello dalla fisica
+        // Aggiorna la posizione del modello dalla fisica
+        this.updatePhysicsPosition(); 
 
         this.updateDebugWireframe();
 
@@ -372,22 +359,26 @@ setPosition(x, y, z) {
             this.thirdPersonCamera.update();
         }
 
+        //Movimento del petto per respirazione personaggio
         if (this.player && this.chestBone) {
             const t = performance.now() / 1000;
             this.chestBone.rotation.x = Math.sin(t * 2.0) * 0.02;
         }
     }
 
+    //funzione chiamata ad ogni frame per festire il movimento del personaggio:
+    //WASD, movimento fisico, animazioni, collisioni
     handleMovement(deltaTime) {
         if (!this.rigidBody || !this.thirdPersonCamera || !this.player) return;
 
+        //la direzione dipende da dove punta la camera
         this.movementVector.set(0, 0, 0);
-
         const forward = this.thirdPersonCamera.getForwardDirection();
         const right = this.thirdPersonCamera.getRightDirection();
 
         let moveRequested = false;
 
+        //imposta movimento wasd
         if (this.keys.forward) {
             this.movementVector.add(forward);
             moveRequested = true;
@@ -406,20 +397,23 @@ setPosition(x, y, z) {
         }
 
         if (moveRequested) {
+            // Normalizza per non fare andare il personaggio piu veloce in diagonale
             this.movementVector.normalize();
 
+            // gestisce la corsa
             const currentSpeed = this.keys.shift ? this.moveSpeed * this.runSpeedMultiplier : this.moveSpeed;
-
+            
+            //calcola la posizione futura del personaggio (senza muvoerlo)
             const currentPhysicsPos = this.rigidBody.translation();
             const targetX = currentPhysicsPos.x + this.movementVector.x * currentSpeed * deltaTime;
             const targetZ = currentPhysicsPos.z + this.movementVector.z * currentSpeed * deltaTime;
-
             const targetPosition = {
                 x: targetX,
                 y: currentPhysicsPos.y,
                 z: targetZ
             };
 
+            //Controlla collisioni future e le collisioni
             if (!this.checkFutureCollision(targetPosition)) {
                 this.rigidBody.setNextKinematicTranslation(targetPosition);
             } else {
@@ -427,26 +421,22 @@ setPosition(x, y, z) {
             }
             const hit = this.checkFutureCollision(targetPosition);
 
+            // se non ci sono collisioni imposta la nuova posizione
             if (!hit) {
                 this.rigidBody.setNextKinematicTranslation(targetPosition);
             } else {
-                console.log("Collisione evitata: oggetto davanti");
-
-                // Mostra info dettagliate sul collider colpito
-                //console.log("→ Collider ID:", hit.collider);
                 const mesh = physicsWorld.bodyToMesh.get(hit.collider);
                 if (mesh) {
-                    console.log("→ Mesh colpita:", mesh.name || mesh);
+                    console.log("Mesh colpita:", mesh.name || mesh);
                 }
             }
 
+            //Rotazione fluida del personaggio
             // Calcola l'angolo di rotazione del personaggio
             // Math.atan2(y, x) restituisce l'angolo tra l'asse x positivo e il punto (x, y)
             const angle = Math.atan2(this.movementVector.x, this.movementVector.z);
-
             // Crea un quaternione target basato sull'angolo
             this.targetRotation.setFromAxisAngle(new THREE.Vector3(0, 1, 0), angle);
-
             // Interpolazione slerp per una rotazione fluida del modello
             this.player.quaternion.slerp(this.targetRotation, this.rotationSpeed);
 
@@ -456,9 +446,18 @@ setPosition(x, y, z) {
             } else {
                 this.setAction(this.walkAction);
             }
+        //nessun movimento
         } else {
             this.rigidBody.setNextKinematicTranslation(this.rigidBody.translation());
             this.setAction(this.idleAction);
+        }
+    }
+
+    //usato per settare la posizione del personaggio per debug
+    setPosition(x, y, z) {
+        if (this.rigidBody) {
+            this.rigidBody.setTranslation({ x: x, y: y + this.characterHeight * 0.5, z: z }, true);
+            this.updatePhysicsPosition();
         }
     }
 

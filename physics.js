@@ -2,63 +2,60 @@ import RAPIER from 'https://cdn.skypack.dev/@dimforge/rapier3d-compat@0.17.0';
 
 import * as THREE from 'three';
 
-// Esporta RAPIER per l'uso in altri moduli
 export { RAPIER };
 
 export class PhysicsWorld {
   constructor() {
-    this.world = null;
-    this.ready = false;
-    this.staticBodies = [];
+    this.world = null; // The physics world instance
+    this.ready = false; // Indicates if the physics is initialized
+    this.staticBodies = []; // List that contain static colliders (ground, trees, etc.)
+    // Maps to link meshes with their colliders
     this.meshToBody = new Map();
     this.bodyToMesh = new Map();
   }
 
   async init() {
     try {
+      // INITIALIZE RAPIER
       await RAPIER.init({});
-
-      
-      // Crea il mondo fisico con gravità
       const gravity = { x: 0.0, y: -9.81, z: 0.0 };
-      this.world = new RAPIER.World(gravity);
-      
+      this.world = new RAPIER.World(gravity); //World with gravity
       this.ready = true;
-      console.log('Physics world initialized');
-      
+      //console.log('Physics world initialized');  
       return true;
+
     } catch (error) {
-      console.error('Failed to initialize physics world:', error);
+      //console.error('Failed to initialize physics world:', error);
       return false;
     }
   }
 
-  // Aggiunge un collider statico per il terreno
-  addGroundCollider(groundMesh) {
+  //A series of methods to add colliders for different objects in the scene
+  addGroundCollider(groundMesh) { 
     if (!this.ready || !groundMesh) return null;
-
     try {
-      // Ottieni la geometria del mesh
       const geometry = groundMesh.geometry;
       
       if (geometry || groundMesh.name.toLowerCase().includes('plane')) {
-        // Per un piano semplice, usa un cuboid collider
-        const bbox = new THREE.Box3().setFromObject(groundMesh);
+        // Crea un bounding box attorno a tutta la mesh
+        const bbox = new THREE.Box3().setFromObject(groundMesh); 
         const size = bbox.getSize(new THREE.Vector3());
 
+        // Calcola le dimensioni del box (serve metà estensione)
         const halfExtents = {
           x: size.x * 0.5,
           y: 0.1,
           z: size.z * 0.5
         };
 
+        //box/cuboid
         const colliderDesc = RAPIER.ColliderDesc.cuboid(
           halfExtents.x,
           halfExtents.y,
           halfExtents.z
         );
 
-        // Posiziona il collider
+        // Set the position of the collider based on the mesh
         const position = groundMesh.getWorldPosition(new THREE.Vector3());
         colliderDesc.setTranslation(position.x, position.y - halfExtents.y, position.z);
 
@@ -72,24 +69,20 @@ export class PhysicsWorld {
         });
 
         const collider = this.world.createCollider(colliderDesc);
-        
+         
+        // Mappa la mesh al collider (For raycast, debug...)
         this.staticBodies.push(collider);
         this.meshToBody.set(groundMesh, collider);
         this.bodyToMesh.set(collider, groundMesh);
-
         //console.log('Ground collider added');
         return collider;
-      } else {
-        // Per geometrie complesse, usa trimesh (più pesante ma preciso)
-        //return this.addTrimeshCollider(groundMesh);
-      }
+      } 
     } catch (error) {
       console.error('Error adding ground collider:', error);
       return null;
     }
   }
 
-  // Aggiunge collider per gli alberi (cilindri semplici)
   addTreeColliders(treeMeshes) {
     if (!this.ready || !treeMeshes.length) return [];
 
@@ -97,17 +90,16 @@ export class PhysicsWorld {
 
     treeMeshes.forEach((treeMesh, index) => {
       try {
-        // Calcola le dimensioni approssimative dell'albero
         const bbox = new THREE.Box3().setFromObject(treeMesh);
         const size = bbox.getSize(new THREE.Vector3());
         
-        // Usa un cilindro come collider per l'albero
+        // Cylindrical collider for the tree trunk
         const radius = Math.max(size.x, size.z) * 0.1; // Raggio del tronco
         const height = size.y * 0.5; // Altezza del tronco (non tutta la chioma)
 
         const colliderDesc = RAPIER.ColliderDesc.cylinder(height * 0.5, radius);
 
-        // Posiziona il collider
+        // Set the position of the collider based on the mesh
         const position = treeMesh.getWorldPosition(new THREE.Vector3());
         colliderDesc.setTranslation(
           position.x, 
@@ -126,12 +118,10 @@ export class PhysicsWorld {
         console.error(`Error adding tree collider ${index}:`, error);
       }
     });
-
     //console.log(`Added ${colliders.length} tree colliders`);
     return colliders;
   }
 
-  // Aggiunge collider statici (box) per le rocce
   addrockColliders(rockMeshes) {
     if (!this.ready || !rockMeshes.length) return [];
 
@@ -220,9 +210,9 @@ export class PhysicsWorld {
     } catch (error) {
       console.error(`Error adding statue collider ${index}:`, error);
     }
-  });
-  return colliders;
-  }
+    });
+    return colliders;
+    }
 
 
   addStatueColliders(statueMeshes) {
@@ -260,120 +250,115 @@ export class PhysicsWorld {
     } catch (error) {
       console.error(`Error adding statue collider ${index}:`, error);
     }
-  });
+    });
 
-  return colliders;
-  }
+    return colliders;
+    }
 
   // Aggiunge collider cilindrico per il mago
   addWizardCollider(wizardMesh) {
-  if (!this.ready || !wizardMesh) return null;
+    if (!this.ready || !wizardMesh) return null;
 
-  try {
-    // Calcola le dimensioni approssimative del mago
-    const bbox = new THREE.Box3().setFromObject(wizardMesh);
-    const size = bbox.getSize(new THREE.Vector3());
-    
-    // Usa un cilindro come collider per il mago
-    const radius = Math.max(size.x, size.z) * 0.02; // Raggio più piccolo per il mago
-    const height = size.y * 0.6; // Altezza del collider
+    try {
+      // Calcola le dimensioni approssimative del mago
+      const bbox = new THREE.Box3().setFromObject(wizardMesh);
+      const size = bbox.getSize(new THREE.Vector3());
+      
+      // Usa un cilindro come collider per il mago
+      const radius = Math.max(size.x, size.z) * 0.02; // Raggio più piccolo per il mago
+      const height = size.y * 0.6; // Altezza del collider
 
-    const colliderDesc = RAPIER.ColliderDesc.cylinder(height * 0.5, radius);
+      const colliderDesc = RAPIER.ColliderDesc.cylinder(height * 0.5, radius);
 
-    // Posiziona il collider
-    const position = wizardMesh.getWorldPosition(new THREE.Vector3());
-    colliderDesc.setTranslation(
-      position.x, 
-      position.y + height * 0.5, 
-      position.z
-    );
+      // Posiziona il collider
+      const position = wizardMesh.getWorldPosition(new THREE.Vector3());
+      colliderDesc.setTranslation(
+        position.x, 
+        position.y + height * 0.5, 
+        position.z
+      );
 
-    const collider = this.world.createCollider(colliderDesc);
-    
-    this.staticBodies.push(collider);
-    this.meshToBody.set(wizardMesh, collider);
-    this.bodyToMesh.set(collider, wizardMesh);
+      const collider = this.world.createCollider(colliderDesc);
+      
+      this.staticBodies.push(collider);
+      this.meshToBody.set(wizardMesh, collider);
+      this.bodyToMesh.set(collider, wizardMesh);
 
-    return collider;
-  } catch (error) {
-    console.error('Error adding wizard collider:', error);
-    return null;
+      return collider;
+    } catch (error) {
+      console.error('Error adding wizard collider:', error);
+      return null;
+    }
   }
+
+  addHintCollider(mesh) {
+    if (!this.ready || !mesh) return null;
+
+    try {
+      // Calcola bounding box dell'oggetto hint
+      const bbox = new THREE.Box3().setFromObject(mesh);
+      const size = bbox.getSize(new THREE.Vector3());
+
+      const halfExtents = {
+        x: size.x / 2,
+        y: size.y / 2,
+        z: size.z / 2
+      };
+
+      // Ottieni posizione globale
+      const position = mesh.getWorldPosition(new THREE.Vector3());
+
+      // Crea un rigid body statico
+      const rigidBodyDesc = RAPIER.RigidBodyDesc.fixed().setTranslation(position.x, position.y + halfExtents.y, position.z);
+      const rigidBody = this.world.createRigidBody(rigidBodyDesc);
+
+      // Crea il collider con dimensioni reali
+      const colliderDesc = RAPIER.ColliderDesc.cuboid(halfExtents.x, halfExtents.y, halfExtents.z);
+      const collider = this.world.createCollider(colliderDesc, rigidBody);
+
+      // Salva mapping
+      this.staticBodies.push(collider);
+      this.meshToBody.set(mesh, collider);
+      this.bodyToMesh.set(collider, mesh);
+
+      return collider;
+
+    } catch (error) {
+      console.error('Error adding hint collider:', error);
+      return null;
+    }
   }
-
- addHintCollider(mesh) {
-  if (!this.ready || !mesh) return null;
-
-  try {
-    // Calcola bounding box dell'oggetto hint
-    const bbox = new THREE.Box3().setFromObject(mesh);
-    const size = bbox.getSize(new THREE.Vector3());
-
-    const halfExtents = {
-      x: size.x / 2,
-      y: size.y / 2,
-      z: size.z / 2
-    };
-
-    // Ottieni posizione globale
-    const position = mesh.getWorldPosition(new THREE.Vector3());
-
-    // Crea un rigid body statico
-    const rigidBodyDesc = RAPIER.RigidBodyDesc.fixed().setTranslation(position.x, position.y + halfExtents.y, position.z);
-    const rigidBody = this.world.createRigidBody(rigidBodyDesc);
-
-    // Crea il collider con dimensioni reali
-    const colliderDesc = RAPIER.ColliderDesc.cuboid(halfExtents.x, halfExtents.y, halfExtents.z);
-    const collider = this.world.createCollider(colliderDesc, rigidBody);
-
-    // Salva mapping
-    this.staticBodies.push(collider);
-    this.meshToBody.set(mesh, collider);
-    this.bodyToMesh.set(collider, mesh);
-
-    return collider;
-
-  } catch (error) {
-    console.error('Error adding hint collider:', error);
-    return null;
-  }
-}
-
-
-
-
 
   addMushroomCollider(mushroomGroup) {
-  if (!this.ready || !mushroomGroup) return null;
+    if (!this.ready || !mushroomGroup) return null;
 
-  try {
-    const bbox = new THREE.Box3().setFromObject(mushroomGroup);
-    const size = bbox.getSize(new THREE.Vector3());
+    try {
+      const bbox = new THREE.Box3().setFromObject(mushroomGroup);
+      const size = bbox.getSize(new THREE.Vector3());
 
-    // Definisce un collider a base cilindrica come tronco fungo
-    const radius = Math.max(size.x, size.z) *16;
-    const height = size.y * 30;
+      // Definisce un collider a base cilindrica come tronco fungo
+      const radius = Math.max(size.x, size.z) *16;
+      const height = size.y * 30;
 
-    const colliderDesc = RAPIER.ColliderDesc.cylinder(height * 0.7, radius);
+      const colliderDesc = RAPIER.ColliderDesc.cylinder(height * 0.7, radius);
 
-    const position = mushroomGroup.getWorldPosition(new THREE.Vector3());
-    colliderDesc.setTranslation(
-      position.x,
-      position.y+2,  // sollevato un po' da terra
-      position.z-0.2
-    );
+      const position = mushroomGroup.getWorldPosition(new THREE.Vector3());
+      colliderDesc.setTranslation(
+        position.x,
+        position.y+2,  
+        position.z-0.2
+      );
 
-    const collider = this.world.createCollider(colliderDesc);
+      const collider = this.world.createCollider(colliderDesc);
 
-    this.staticBodies.push(collider);
-    this.meshToBody.set(mushroomGroup, collider);
-    this.bodyToMesh.set(collider, mushroomGroup);
-    return collider;
-  } catch (error) {
-    console.error('Error adding mushroom collider:', error);
-    return null;
-  }
-
+      this.staticBodies.push(collider);
+      this.meshToBody.set(mushroomGroup, collider);
+      this.bodyToMesh.set(collider, mushroomGroup);
+      return collider;
+    } catch (error) {
+      console.error('Error adding mushroom collider:', error);
+      return null;
+    }
   }
 
   addCrateColliders(crateMeshes) {
@@ -412,7 +397,6 @@ export class PhysicsWorld {
       console.error(`Error adding crate collider ${index}:`, error);
     }
   });
-
   return colliders;
   }
 
@@ -452,87 +436,82 @@ export class PhysicsWorld {
       console.error(`Error adding stand collider ${index}:`, error);
     }
   });
-
   return colliders;
   }
 
-  // Aggiunge un collider sferico statico per l'ape
-// Aggiunge un collider sferico statico per l'ape
-addBeeCollider(beeMesh) {
-  if (!this.ready || !beeMesh) return null;
 
-  try {
-    const radius = 0.5;  // Raggio fisso della sfera
-    const colliderDesc = RAPIER.ColliderDesc.ball(radius);
+  addBeeCollider(beeMesh) {
+    if (!this.ready || !beeMesh) return null;
 
-    // Prendi posizione dell’ape
-    const position = beeMesh.getWorldPosition(new THREE.Vector3());
-    colliderDesc.setTranslation(position.x, position.y + radius, position.z);
+    try {
+      const radius = 0.5;  // Raggio fisso della sfera
+      const colliderDesc = RAPIER.ColliderDesc.ball(radius);
 
-    const collider = this.world.createCollider(colliderDesc);
+      // Prendi posizione dell’ape
+      const position = beeMesh.getWorldPosition(new THREE.Vector3());
+      colliderDesc.setTranslation(position.x, position.y + radius, position.z);
 
-    this.staticBodies.push(collider);
-    this.meshToBody.set(beeMesh, collider);
-    this.bodyToMesh.set(collider, beeMesh);
+      const collider = this.world.createCollider(colliderDesc);
 
-    return collider;
-  } catch (error) {
-    console.error('Error adding bee collider:', error);
-    return null;
-  }
-}
+      this.staticBodies.push(collider);
+      this.meshToBody.set(beeMesh, collider);
+      this.bodyToMesh.set(collider, beeMesh);
 
-
-
-
-
-
-
-  addMapBoundaries(areaWidth = 100, areaDepth = 100, wallHeight = 20, wallThickness = 2, centerX = 30, centerZ =-6) {
-  if (!this.ready) return [];
-
-  const colliders = [];
-
-  const halfW = areaWidth / 2;
-  const halfD = areaDepth / 2;
-  const halfH = wallHeight / 2;
-  const halfT = wallThickness / 2;
-
-  const walls = [
-    // Nord
-    {
-      position: { x: centerX, y: halfH, z: centerZ - halfD - halfT },
-      size: { x: halfW, y: halfH, z: halfT }
-    },
-    // Sud
-    {
-      position: { x: centerX, y: halfH, z: centerZ + halfD + halfT },
-      size: { x: halfW, y: halfH, z: halfT }
-    },
-    // Ovest
-    {
-      position: { x: centerX - halfW - halfT, y: halfH, z: centerZ },
-      size: { x: halfT, y: halfH, z: halfD }
-    },
-    // Est
-    {
-      position: { x: centerX + halfW + halfT, y: halfH, z: centerZ },
-      size: { x: halfT, y: halfH, z: halfD }
+      return collider;
+    } catch (error) {
+      console.error('Error adding bee collider:', error);
+      return null;
     }
-  ];
-
-  for (const { position, size } of walls) {
-    const colliderDesc = RAPIER.ColliderDesc.cuboid(size.x, size.y, size.z);
-    colliderDesc.setTranslation(position.x, position.y, position.z);
-    const collider = this.world.createCollider(colliderDesc);
-    this.staticBodies.push(collider);
-    colliders.push(collider);
-  }
-  this.boundaryParams = { areaWidth, areaDepth, centerX, centerZ };
-
-  return colliders;
   }
 
+  //Add boundaries to the map
+  addMapBoundaries(areaWidth = 100, areaDepth = 100, wallHeight = 20, wallThickness = 2, centerX = 30, centerZ =-6) {
+    if (!this.ready) return [];
+
+    const colliders = [];
+
+    const halfW = areaWidth / 2;
+    const halfD = areaDepth / 2;
+    const halfH = wallHeight / 2;
+    const halfT = wallThickness / 2;
+
+    const walls = [
+      // Nord
+      {
+        position: { x: centerX, y: halfH, z: centerZ - halfD - halfT },
+        size: { x: halfW, y: halfH, z: halfT }
+      },
+      // Sud
+      {
+        position: { x: centerX, y: halfH, z: centerZ + halfD + halfT },
+        size: { x: halfW, y: halfH, z: halfT }
+      },
+      // Ovest
+      {
+        position: { x: centerX - halfW - halfT, y: halfH, z: centerZ },
+        size: { x: halfT, y: halfH, z: halfD }
+      },
+      // Est
+      {
+        position: { x: centerX + halfW + halfT, y: halfH, z: centerZ },
+        size: { x: halfT, y: halfH, z: halfD }
+      }
+    ];
+
+    //Per ogni muro, crea un collider cubico statico
+    for (const { position, size } of walls) {
+      const colliderDesc = RAPIER.ColliderDesc.cuboid(size.x, size.y, size.z);
+      colliderDesc.setTranslation(position.x, position.y, position.z);
+      const collider = this.world.createCollider(colliderDesc);
+      this.staticBodies.push(collider);
+      colliders.push(collider);
+    }
+    // Salva i parametri del confine per controllare se si esce dalla mappa
+    this.boundaryParams = { areaWidth, areaDepth, centerX, centerZ };
+    return colliders;
+  }
+
+  // Controlla se la posizione è fuori dai confini della mappa
   isOutsideMap(position) {
     const { centerX, centerZ, areaWidth, areaDepth } = this.boundaryParams;
     const x = position.x, z = position.z;
@@ -543,10 +522,6 @@ addBeeCollider(beeMesh) {
       z < centerZ - areaDepth / 2 - margin || z > centerZ + areaDepth / 2 + margin
     );
   }
-
-
-
-
 
 
   // Aggiorna il mondo fisico
@@ -565,10 +540,15 @@ addBeeCollider(beeMesh) {
 
     const ray = new RAPIER.Ray(origin, direction);
     const hit = this.world.castRay(ray, maxDistance, true);
+    //Hit è un oggetto che contiene informazioni sulla collisione (altrimenti null):
+    // - toi: distanza dal punto di partenza al punto di impatto
+    // - collider: il collider colpito
+    // - normal: normale del punto d’impatto 
 
     if (hit) {
       const collider = hit.collider;
-      const mesh = this.bodyToMesh.get(collider);
+      // Trova la mesh associata al collider
+      const mesh = this.bodyToMesh.get(collider); 
       
       return {
         point: ray.pointAt(hit.toi),
@@ -578,7 +558,6 @@ addBeeCollider(beeMesh) {
         mesh: mesh
       };
     }
-
     return null;
   }
 
@@ -665,14 +644,8 @@ export function visualizeColliders(scene) {
     scene.add(mesh);
     visualMeshes.push(mesh);
   }
-
   return visualMeshes;
 }
-
-
-
-
-
 
 // Istanza globale del mondo fisico
 export const physicsWorld = new PhysicsWorld();

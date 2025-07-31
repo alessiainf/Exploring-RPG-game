@@ -1,6 +1,8 @@
 // thirdPersonCamera.js
 import * as THREE from 'three';
 
+//camera-> quella di three.js
+//target-> personaggio
 export class ThirdPersonCamera {
   constructor(camera, target) {
     this.camera = camera;
@@ -16,7 +18,7 @@ export class ThirdPersonCamera {
     // Angoli di rotazione
     this.horizontalAngle = -Math.PI/2;
     this.verticalAngle = 0.1;
-    this.minVerticalAngle = -Math.PI / 3;
+    this.minVerticalAngle = -Math.PI / 25 ;
     this.maxVerticalAngle = Math.PI / 3;
     
     // Posizioni
@@ -51,9 +53,12 @@ export class ThirdPersonCamera {
     
     document.addEventListener('mousemove', (e) => {
       if (this.isMouseDown) {
+        //e.movementXY sono le differenze di posizione 
+        // del mouse rispetto al frame precedente
         const deltaX = e.movementX || e.mozMovementX || 0;
         const deltaY = e.movementY || e.mozMovementY || 0;
         
+        //aggiorna gli angoli della camera in base al movimento del mouse
         this.horizontalAngle -= deltaX * this.rotationSpeed;
         this.verticalAngle -= deltaY * this.rotationSpeed;
         
@@ -75,10 +80,11 @@ export class ThirdPersonCamera {
     document.addEventListener('contextmenu', (e) => e.preventDefault());
   }
   
+  //telecamera che segue il personaggio
   update() {
     if (!this.target) return;
     
-    // Calcola la posizione ideale della telecamera
+    // Calcola la posizione ideale della telecamera (cioè dove dovrebbe guardare)
     const horizontalDistance = this.distance * Math.cos(this.verticalAngle);
     const verticalDistance = this.distance * Math.sin(this.verticalAngle);
     
@@ -88,12 +94,11 @@ export class ThirdPersonCamera {
       horizontalDistance * Math.cos(this.horizontalAngle)
     );
     
-    // Posizione ideale della telecamera
     const idealPosition = new THREE.Vector3()
       .copy(this.target.position)
       .add(this.idealOffset);
     
-    // Punto ideale dove guardare
+    // Punto ideale dove guardare (testa del personaggio)
     this.idealLookat.copy(this.target.position);
     this.idealLookat.y += this.heightOffset;
     
@@ -101,12 +106,12 @@ export class ThirdPersonCamera {
     this.currentPosition.lerp(idealPosition, this.followSpeed);
     this.currentLookat.lerp(this.idealLookat, this.followSpeed);
     
-    // Applica la posizione alla telecamera
+    // Aggiorna la posizione e orienta la camera verso il personaggio.
     this.camera.position.copy(this.currentPosition);
     this.camera.lookAt(this.currentLookat);
   }
   
-  // Ottieni la direzione forward della telecamera (per i controlli WASD)
+  // Ottiene il vettore frontale della telecamera (per i controlli WASD)
   getForwardDirection() {
     const forward = new THREE.Vector3();
     this.camera.getWorldDirection(forward);

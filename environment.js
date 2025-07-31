@@ -36,64 +36,61 @@ export async function loadWorld(scene) {
           child.receiveShadow = true;
         }
         if (!(child.material instanceof THREE.MeshStandardMaterial)) {
-      child.material = new THREE.MeshStandardMaterial({
-        color: child.material?.color ?? new THREE.Color(0x888888),
-        roughness: 1,
-        metalness: 0,
-        fog: true
-      });
-    }
+          child.material = new THREE.MeshStandardMaterial({
+            color: child.material?.color ?? new THREE.Color(0x888888),
+            roughness: 1,
+            metalness: 0,
+            fog: true
+          });
+        }
         
-        // Identifica il terreno
+        //Salviamo le mesh degli oggetti del mondo in array distinti
+        // terreno
         if (child.name.toLowerCase().includes("plane")) {
           groundMesh = child;
           child.material = new THREE.MeshStandardMaterial({ color: 0x3C7626}); // forest green
         }
         
-        // Identifica l'erba
+        //l'erba
         if (child.isMesh && child.name.toLowerCase().includes("grass")) {
           grassMeshes.push(child);
         }
 
-        // Identifica i fiori
+        //fiori
         if (child.isMesh && child.name.toLowerCase().includes("flower")) {
           flowerMeshes.push(child);
         }
         
-        // Identifica gli alberi
-        if (child.name.toLowerCase().includes("tree")) {
+        //alberi
+        if (child.name.toLowerCase().includes("tree") && child.type === "Group") {
           treeMeshes.push(child);
         }
 
-        // Identifica le rocce
+        //rocce
         if (child.name.toLowerCase().includes("rock")) {
           rockMeshes.push(child);
         }
 
-        // Identifica colonne
+        //colonne
         if (child.name.toLowerCase().includes("column")) {
           columnMeshes.push(child);
         }
 
-        // Identifica le casse
+        //casse
         if (child.name.toLowerCase().includes("crate")) {
           crateMeshes.push(child);
         }
 
-        // Identifica i piedistalli
+        //Stand
         if (child.name.toLowerCase().includes("stand")) {
           standMeshes.push(child);
         }
 
       });
-      
+      // Aggiungi la mesh del mondo alla scena e poi la fisica
       scene.add(world);
-      
       // Aggiungi i collider fisici dopo aver caricato il mondo
       setupWorldPhysics();
-      
-      console.log('World loaded with physics');
-      
       resolve(world);
     }, 
     function(progress) {
@@ -113,32 +110,32 @@ function setupWorldPhysics() {
     return;
   }
 
-  // Aggiungi collider per il terreno
+  // Aggiungi collider per il terreno con le funzioni definite in physics.js
   if (groundMesh) {
     physicsWorld.addGroundCollider(groundMesh);
   }
 
-  // Aggiungi collider per gli alberi
+  //alberi
   if (treeMeshes.length > 0) {
     physicsWorld.addTreeColliders(treeMeshes);
   }
 
-  // Aggiungi collider per le rocce
+  //rocce
   if (rockMeshes.length > 0) {
     physicsWorld.addrockColliders(rockMeshes);
   }
 
-  // Aggiungi collider per le statue (se già caricate)
+  //statue 
   if (columnMeshes.length > 0) {
     physicsWorld.addColumnColliders(columnMeshes);
   }
 
-   // Aggiungi collider per le colonne (se già caricate)
+   //colonne 
   if (statues.length > 0) {
     physicsWorld.addStatueColliders(statues);
   }
 
-  // Aggiungi collider per il mago (se già caricato)
+  // mago 
   if (wizard) {
     physicsWorld.addWizardCollider(wizard);
   }
@@ -147,26 +144,23 @@ function setupWorldPhysics() {
     physicsWorld.addHintCollider(hintObject); 
   }
 
-    // Aggiungi collider per il fungo
+    //fungo
   if (mushrooms.length > 0) {
     physicsWorld.addMushroomCollider(mushrooms[0]);
   }
 
-  //aggiungi collider ape
+  //ape
   if (bee) {
     physicsWorld.addBeeCollider(bee); 
   }
   
-
   if (crateMeshes.length > 0) {
   physicsWorld.addCrateColliders(crateMeshes);
-}
+  }
 
-if (standMeshes.length > 0) {
-  physicsWorld.addStandColliders(standMeshes);
-}
-
-
+  if (standMeshes.length > 0) {
+    physicsWorld.addStandColliders(standMeshes);
+  }
 }
 
 // Funzione helper per ottenere l'altezza del terreno in una posizione
@@ -188,54 +182,68 @@ export function checkCollision(origin, direction, maxDistance = 10) {
 // Aggiorna l'erba dinamica 
 export function updateGrass(playerPosition, time) {
   grassMeshes.forEach((mesh, i) => {
+    //oscilla sinusoidalmente ogni ciuffo nel tempo.
     const baseSway = Math.sin(time + i * 0.3) * 0.1;
+
+    //se il giocatore è vicino alla mesh
     const distance = mesh.position.distanceTo(playerPosition);
-    
     if (distance < 1.5) {
+      //l'erba si piega nella direzione opposta del giocatore
+      //subvectors = pos_erba - pos_gioc= direzione opposta (normalizzata)
       const away = new THREE.Vector3().subVectors(mesh.position, playerPosition).normalize();
+      //trasformo la direzione in due direzioni di piegamento lungo x e y
       const angle = Math.atan2(away.z, away.x);
       const targetX = 0.1 * Math.cos(angle);
       const targetZ = 0.1 * Math.sin(angle);
-      
+      //interpolo la rotazione iniziale con quella target per ottenere movimento realistico
       mesh.rotation.x = THREE.MathUtils.lerp(mesh.rotation.x, targetX, 0.2);
       mesh.rotation.z = THREE.MathUtils.lerp(mesh.rotation.z, targetZ, 0.2);
+    
     } else {
+      //simula vento
       const targetX = baseSway * 0.3;
       const targetZ = baseSway * 0.3;
-      
       mesh.rotation.x = THREE.MathUtils.lerp(mesh.rotation.x, targetX, 0.05);
       mesh.rotation.z = THREE.MathUtils.lerp(mesh.rotation.z, targetZ, 0.05);
     }
   });
 }
 
-// Aggiorna i fiori dinamici
 export function updateFlower(playerPosition, time) {
   flowerMeshes.forEach((mesh, i) => {
     const baseSway = Math.sin(time + i * 0.3) * 0.1;
 
-    const targetX = baseSway * 0.3;
-    const targetZ = baseSway * 0.3;
-
-    mesh.rotation.x = THREE.MathUtils.lerp(mesh.rotation.x, targetX, 0.05);
-    mesh.rotation.z = THREE.MathUtils.lerp(mesh.rotation.z, targetZ, 0.05);
+    const distance = mesh.position.distanceTo(playerPosition);
+    if (distance < 1.5) {
+      const away = new THREE.Vector3().subVectors(mesh.position, playerPosition).normalize();
+      const angle = Math.atan2(away.z, away.x);
+      const targetX = 0.1 * Math.cos(angle);
+      const targetZ = 0.1 * Math.sin(angle);
+      mesh.rotation.x = THREE.MathUtils.lerp(mesh.rotation.x, targetX, 0.2);
+      mesh.rotation.z = THREE.MathUtils.lerp(mesh.rotation.z, targetZ, 0.2);
+    
+    } else {
+      const targetX = baseSway * 0.3;
+      const targetZ = baseSway * 0.3;
+      mesh.rotation.x = THREE.MathUtils.lerp(mesh.rotation.x, targetX, 0.05);
+      mesh.rotation.z = THREE.MathUtils.lerp(mesh.rotation.z, targetZ, 0.05);
+    }
   });
 }
 
 
-
+//add procedurally the pavement and populate it with trees and grass
 export function addProceduralFloor(scene, size = 300, segments = 30) {
+  
+  //crea piastralle planari orizzontali e le unisce
   const floorGroup = new THREE.Group();
   const tileSize = size / segments;
-
   const material = new THREE.MeshStandardMaterial({
     color: 0x3C7626, // verde oliva scuro
     roughness: 1,
     metalness: 0,
     fog: true
   });
-
-  // === CREAZIONE DEL PAVIMENTO ===
   for (let x = -size / 2; x < size / 2; x += tileSize) {
     for (let z = -size / 2; z < size / 2; z += tileSize) {
       const geometry = new THREE.PlaneGeometry(tileSize, tileSize);
@@ -246,18 +254,15 @@ export function addProceduralFloor(scene, size = 300, segments = 30) {
       floorGroup.add(tile);
     }
   }
-  
-
-
   scene.add(floorGroup);
 
-  // === ALBERI ED ERBA RANDOMICI FUORI DAL CENTRO ===
+  // Aggiunta di alberi e erba randomici fuori dai muri
   const addRandomObjects = () => {
-    const treeCount = 400;   // Aumentato
-    const grassCount = 5000;  // Aumentato
-    const exclusionRadius = 30; // zona interna senza oggetti (muri)
+    const treeCount = 400;   
+    const grassCount = 8000; 
 
-        const exclusionCenterX = 30;
+    // zona interna senza oggetti (muri)
+    const exclusionCenterX = 30;
     const exclusionCenterZ = -6;
     const exclusionWidth = 100;
     const exclusionDepth = 100;
@@ -273,7 +278,8 @@ export function addProceduralFloor(scene, size = 300, segments = 30) {
 
     // === Alberi ===
     for (let i = 0; i < treeCount; i++) {
-      const tree = treeMeshes[0]?.clone();
+      const tree = treeMeshes[Math.floor(Math.random() * treeMeshes.length)]?.clone();
+
       if (!tree) continue;
 
       let x, z;
@@ -296,7 +302,9 @@ export function addProceduralFloor(scene, size = 300, segments = 30) {
 
     // === Erba ===
     for (let i = 0; i < grassCount; i++) {
-      const grass = grassMeshes[0]?.clone();
+      const filteredGrassMeshes = grassMeshes.filter(mesh => !mesh.name.toLowerCase().includes('wheat'));
+      const grass = filteredGrassMeshes[Math.floor(Math.random() * filteredGrassMeshes.length)]?.clone();
+
       if (!grass) continue;
 
       let x, z;
@@ -320,14 +328,10 @@ export function addProceduralFloor(scene, size = 300, segments = 30) {
       scene.add(grass);
     }
   };
-
   addRandomObjects();
 }
 
-
-
-
-// Pulisci le risorse quando necessario
+// Pulisci le risorse 
 export function cleanupWorld() {
   grassMeshes.length = 0;
   flowerMeshes.length = 0;
