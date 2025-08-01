@@ -4,31 +4,30 @@ import * as THREE from 'three';
 let currentLights = null;
 
 export function setupLights(scene) {
-  // Luce ambientale viola/blu soft
-const ambientLight = new THREE.AmbientLight(0x554477, 0.5); 
- // viola profondo e meno intenso
 
+  // Luce ambientale soft viola/blu
+  const ambientLight = new THREE.AmbientLight(0x554477, 0.5); 
 
-  // Luce direzionale più morbida, con ombre se necessario
-const directionalLight = new THREE.DirectionalLight(0xaa88ff, 1.0);
-directionalLight.position.set(-30, 80, 10);
-directionalLight.target.position.set(12, 0, -3); 
-scene.add(directionalLight.target);
+  // Luce direzionale con ombre morbide e meno pixelate
+  const directionalLight = new THREE.DirectionalLight(0xaa88ff, 1.0);
+  directionalLight.position.set(-30, 80, 10);
+  directionalLight.target.position.set(12, 0, -3);
+  scene.add(directionalLight.target);
 
-//const helper = new THREE.CameraHelper(directionalLight.shadow.camera);
-//scene.add(helper);
-
+  // Ombre attive
   directionalLight.castShadow = true;
+  //directionalLight.shadow.mapSize.set(4096, 4096);
+  directionalLight.shadow.mapSize.set(8192, 8192); 
 
-  directionalLight.shadow.mapSize.set(4096, 4096);
-  directionalLight.shadow.camera.near = 1;
+  directionalLight.shadow.camera.near = 10;
   directionalLight.shadow.camera.far = 140;
-  directionalLight.shadow.camera.left = -140;
-  directionalLight.shadow.camera.right = 140;
-  directionalLight.shadow.camera.top = 140;
-  directionalLight.shadow.camera.bottom = -140;
-  directionalLight.shadow.bias = -0.0001;  
-  directionalLight.shadow.radius = 0; 
+  directionalLight.shadow.camera.left = -80;
+  directionalLight.shadow.camera.right = 80;
+  directionalLight.shadow.camera.top = 100;
+  directionalLight.shadow.camera.bottom = -80;
+
+  // Usa normalBias per evitare artefatti con VSM
+  directionalLight.shadow.normalBias = 0.07;
 
   scene.add(ambientLight);
   scene.add(directionalLight);
@@ -40,7 +39,6 @@ scene.add(directionalLight.target);
 
   return currentLights;
 }
-
 
 export function getLights() {
   return currentLights;

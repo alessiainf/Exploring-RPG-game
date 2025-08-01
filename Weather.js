@@ -5,13 +5,14 @@ import { getLights } from './lighting.js';
 import { checkStatueOrientations } from './Statuegame.js';
 
 
-//statue fame
+//statue game
 let fog;  // nebbia attiva
 let weatherCleared = false;
 let clearingT = 0; 
 const clearingSpeed = 0.01; // velocità di dissolvenza
 let mystZoneT = 0; // 0 = fuori dalla nebbia, 1 = nebbia piena
-const mystZoneSpeed = 0.010; // Velocità di apparizione/scomparsa
+const mystZoneSpeed = 0.03; // Velocità di apparizione/scomparsa
+//sfera semitrasparente che circonda il mago
 let wizardFogMesh;
 let wizardFogMaterial;
 
@@ -32,12 +33,13 @@ const FUNGUS_ZONE_RADIUS = 15;
 
 
 
-
+//inizializza il meteo
 export function initWeather(scene) {
+  //nebia globale viola
   fog = new THREE.Fog(0x8e80aa, 50, 180); 
-
   scene.fog = fog;
 
+   //===== STATUE GAME ======
   // Mesh semitrasparente per simulare nebbia grigia densa attorno al mago
   const wizardFogGeo = new THREE.SphereGeometry(20, 32, 32);
   wizardFogMaterial = new THREE.MeshBasicMaterial({
@@ -51,12 +53,14 @@ export function initWeather(scene) {
   scene.add(wizardFogMesh);
 }
 
-export function updateWeather(playerPosition) { 
 
-  //Statue game
+export function updateWeather(playerPosition) { 
+  //====== STATUE GAME =======
   if (!wizard || !fog) return;
 
+  //orientamento corretto statue?
   const statuesCorrect = checkStatueOrientations();
+  //distanza del giocatore dal mago
   const distToWizard = playerPosition.distanceTo(wizard.position);
   const fogZoneRadius = 20;
 
@@ -66,48 +70,56 @@ export function updateWeather(playerPosition) {
 
   // Valori per la nebbia fitta vicino al mago
   const denseNear = 1;
-  const denseFar = 30;
+  const denseFar = 25;
 
+  //Se le statue sono orientate correttamente -> nebbia svanisce
   if (statuesCorrect) {
+    //clearingT sale lentamente a 1 e viceversa
     clearingT = THREE.MathUtils.clamp(clearingT + clearingSpeed, 0, 1);
   } else {
     clearingT = THREE.MathUtils.clamp(clearingT - clearingSpeed, 0, 1);
   }
 
-  // --- Transizione nella zona del mago ---
+  // Ci troviamo nella zona del mago
   const insideFogZone = distToWizard < fogZoneRadius;
-
   if (insideFogZone) {
+    //attiviamo la cupola e viceversa
     mystZoneT = THREE.MathUtils.clamp(mystZoneT + mystZoneSpeed, 0, 1);
   } else {
     mystZoneT = THREE.MathUtils.clamp(mystZoneT - mystZoneSpeed, 0, 1);
   }
 
-// Gestione intensità della cupola grigia intorno al mago
-const t = THREE.MathUtils.lerp(0, 1, clearingT);
-const mixT = mystZoneT * (1 - t); // 1 = nebbia grigia piena, 0 = dissolta
+  // Gestione intensità della cupola grigia intorno al mago
+  const t = THREE.MathUtils.lerp(0, 1, clearingT);
+  //mixT gestisce la nebbia. 
+  // Se clearingT=1=t allora la nebbia si dissolve
+  // Se cleringT=0=t allora la nebbia è piena
+  //se mystZoneT=1 la cupola è visibile, altrimenti no
+  const mixT = mystZoneT * (1 - t);
 
-wizardFogMaterial.opacity = THREE.MathUtils.lerp(0.5, 0.0, 1 - mixT);
-
-// Rendi la cupola visibile e posizionala sul mago
-wizardFogMesh.visible = mixT > 0.01;
-wizardFogMesh.position.copy(wizard.position);
-
-
-
-  // Interpola near/far nebbia
+  // Nella zona del mago con puzzle non risolto la vista è ridotta
   fog.near = THREE.MathUtils.lerp(baseNear, denseNear, mixT);
   fog.far  = THREE.MathUtils.lerp(baseFar, denseFar, mixT);
 
-  // Luci in zona mago
+
+  // Rendi la cupola visibile e posizionala sul mago
+  wizardFogMesh.visible = mixT > 0.01;
+  wizardFogMesh.position.copy(wizard.position);
+
+  //se mixT è 1 (cupola e nebbia visibili) 
+  // allora fattore di interpolazione = 0 -> opacità rimane
+  //altrimenti il fattore di interpolazione è 1 e la nebbia svanisce
+  wizardFogMaterial.opacity = THREE.MathUtils.lerp(0.5, 0.0, 1 - mixT);
+
+  //se MixT==1 allora riduciamo l'intensità delle luci
   const lights = getLights();
   if (lights) {
     lights.ambientLight.intensity = THREE.MathUtils.lerp(1.5, 0.3, mixT);
     lights.directionalLight.intensity = THREE.MathUtils.lerp(4, 0.8, mixT);
   }
 
-  // Dandelions fluff :) for bee game
-  // Dandelions fluff :) for bee game (sempre visibili nella loro zona)
+  //======== BEE GAME =========
+  // Dandelions fluff :) for bee game 
   dandelionGroup.visible = true;
 
   if (dandelionsInitialized) {
@@ -121,18 +133,16 @@ wizardFogMesh.position.copy(wizard.position);
         p.position.z += (Math.random() - 0.5) * 0.002;
 
         // Altezza massima oltre cui rigenerare
-const MAX_FLUFF_HEIGHT = 10;
+        const MAX_FLUFF_HEIGHT = 10;
 
-if (p.position.y > MAX_FLUFF_HEIGHT) {
-  p.position.set(
-    (Math.random() - 0.5) * 50,  // X random su tutta la mappa
-    1 + Math.random() * 2,        // Y vicino al suolo
-    (Math.random() - 0.5) * 50   // Z random su tutta la mappa
-  );
-}
-
+        if (p.position.y > MAX_FLUFF_HEIGHT) {
+          p.position.set(
+            (Math.random() - 0.5) * 50,  // X random su tutta la mappa
+            1 + Math.random() * 2,        // Y vicino al suolo
+            (Math.random() - 0.5) * 50   // Z random su tutta la mappa
+          );
+        }
       }
-    
   }
 
 

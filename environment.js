@@ -316,7 +316,7 @@ export function addProceduralFloor(scene, size = 300, segments = 30) {
         if (attempts > 100) break;
       } while (!isOutsideWalls(x, z));
 
-      grass.position.set(x, 0, z);
+      grass.position.set(x, -0.1, z);
       grass.rotation.y = Math.random() * Math.PI * 2;
 
       const scale = 0.5 + Math.random() * 0.5;

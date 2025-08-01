@@ -345,6 +345,8 @@ function animate(time) {
     promptState.active = false;
     promptState.text = '';
 
+    renderer.shadowMap.enabled = true;
+    renderer.shadowMap.type = THREE.VSMShadowMap;
 
     renderer.render(scene, camera);
 }
