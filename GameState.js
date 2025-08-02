@@ -54,10 +54,6 @@ export function hasCollectedAll() {
 }
 
 
-
-//
-
-
 if (hasCollectedAll()) {
 //  // apri la porta o attiva l'uscita
 }

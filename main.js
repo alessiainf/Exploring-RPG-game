@@ -62,6 +62,8 @@ const camera = new THREE.PerspectiveCamera(40, window.innerWidth / window.innerH
 //camera.position.set(0, 3, -6);
 
 const renderer = new THREE.WebGLRenderer({ antialias: true });
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.VSMShadowMap;
 renderer.setSize(window.innerWidth, window.innerHeight);
 document.body.appendChild(renderer.domElement);
 
@@ -71,8 +73,6 @@ controls.enableDamping = true;
 
 // === LUCI ===
 setupLights(scene);
-renderer.shadowMap.enabled = true;
-renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 
 //wizard game
 await loadStatues(scene);
@@ -345,8 +345,7 @@ function animate(time) {
     promptState.active = false;
     promptState.text = '';
 
-    renderer.shadowMap.enabled = true;
-    renderer.shadowMap.type = THREE.VSMShadowMap;
+    
 
     renderer.render(scene, camera);
 }

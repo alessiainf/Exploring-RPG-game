@@ -7,7 +7,6 @@ import { checkStatueOrientations } from './Statuegame.js';
 
 //statue game
 let fog;  // nebbia attiva
-let weatherCleared = false;
 let clearingT = 0; 
 const clearingSpeed = 0.01; // velocità di dissolvenza
 let mystZoneT = 0; // 0 = fuori dalla nebbia, 1 = nebbia piena
@@ -53,6 +52,38 @@ export function initWeather(scene) {
   scene.add(wizardFogMesh);
 }
 
+export function initDandelions(scene, center, count = 400) {
+  if (dandelionsInitialized) return;
+  beeZoneCenter.copy(center);
+
+  //definisco una sfera piccola bianca e leggera
+  const geometry = new THREE.SphereGeometry(0.03, 3, 3);
+  const material = new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.8 });
+
+  for (let i = 0; i < count; i++) {
+    const p = new THREE.Mesh(geometry, material);
+
+    // Posiziono randomicamente intorno ad un raggio di 70 unità
+    p.position.set(
+      center.x + (Math.random() - 0.5) * 2 * DANDELION_ZONE_RADIUS,
+      center.y + Math.random() * 0.5,
+      center.z + (Math.random() - 0.5) * 2 * DANDELION_ZONE_RADIUS
+    );
+
+    //aggiungo una velocità verticale leggera
+    p.userData.velocity = new THREE.Vector3(
+      (Math.random() - 0.5) * 0.01,
+      0.003 + Math.random() * 0.005,
+      (Math.random() - 0.5) * 0.01
+    );
+    dandelionParticles.push(p);
+    dandelionGroup.add(p);
+  }
+
+  //aggiungo alla scena
+  scene.add(dandelionGroup);
+  dandelionsInitialized = true;
+}
 
 export function updateWeather(playerPosition) { 
   //====== STATUE GAME =======
@@ -114,97 +145,54 @@ export function updateWeather(playerPosition) {
   //se MixT==1 allora riduciamo l'intensità delle luci
   const lights = getLights();
   if (lights) {
-    lights.ambientLight.intensity = THREE.MathUtils.lerp(1.5, 0.3, mixT);
-    lights.directionalLight.intensity = THREE.MathUtils.lerp(4, 0.8, mixT);
+    lights.ambientLight.intensity = THREE.MathUtils.lerp(1.5, 0.2, mixT);
+    lights.directionalLight.intensity = THREE.MathUtils.lerp(4, 0.7, mixT);
   }
 
   //======== BEE GAME =========
-  // Dandelions fluff :) for bee game 
   dandelionGroup.visible = true;
-
   if (dandelionsInitialized) {
-    const distToBee = playerPosition.distanceTo(beeZoneCenter);
-    const insideBeeZone = distToBee < DANDELION_ZONE_RADIUS;
+    for (const p of dandelionParticles) {
+      //posiziona i dandelion e e li muove  in alto e li fa oscillare leggermente ai lati
+      p.position.add(p.userData.velocity);
+      p.position.x += (Math.random() - 0.5) * 0.002;
+      p.position.z += (Math.random() - 0.5) * 0.002;
 
-    
-      for (const p of dandelionParticles) {
-        p.position.add(p.userData.velocity);
-        p.position.x += (Math.random() - 0.5) * 0.002;
-        p.position.z += (Math.random() - 0.5) * 0.002;
+      // Altezza massima oltre cui rigenerare i dandelions
+      const MAX_FLUFF_HEIGHT = 10;
 
-        // Altezza massima oltre cui rigenerare
-        const MAX_FLUFF_HEIGHT = 10;
-
-        if (p.position.y > MAX_FLUFF_HEIGHT) {
-          p.position.set(
-            (Math.random() - 0.5) * 50,  // X random su tutta la mappa
-            1 + Math.random() * 2,        // Y vicino al suolo
-            (Math.random() - 0.5) * 50   // Z random su tutta la mappa
-          );
-        }
+      if (p.position.y > MAX_FLUFF_HEIGHT) {
+        p.position.set(
+          (Math.random() - 0.5) * 50,  // X random su tutta la mappa
+          1 + Math.random() * 2,        // Y vicino al suolo
+          (Math.random() - 0.5) * 50   // Z random su tutta la mappa
+        );
       }
+    }
   }
 
-
-
-    // Spore luminose del fungone
-  // Spore luminose del fungone (sempre visibili nella loro zona)
+  //======== MUSHROOM GAME =========
   sporeGroup.visible = true;
-
   if (sporesInitialized) {
     const distToFungus = playerPosition.distanceTo(fungusZoneCenter);
     const insideFungusZone = distToFungus < FUNGUS_ZONE_RADIUS;
-
     
-      for (const p of sporeParticles) {
-        p.position.add(p.userData.velocity);
-        p.position.x += (Math.random() - 0.5) * 0.001;
-        p.position.z += (Math.random() - 0.5) * 0.001;
+    for (const p of sporeParticles) {
+      p.position.add(p.userData.velocity);
+      p.position.x += (Math.random() - 0.5) * 0.001;
+      p.position.z += (Math.random() - 0.5) * 0.001;
 
-        if (p.position.distanceTo(fungusZoneCenter) > FUNGUS_ZONE_RADIUS) {
-          p.position.set(
-            fungusZoneCenter.x + (Math.random() - 0.5) * 2 * FUNGUS_ZONE_RADIUS,
-            fungusZoneCenter.y + Math.random() * 2,
-            fungusZoneCenter.z + (Math.random() - 0.5) * 2 * FUNGUS_ZONE_RADIUS
-          );
-        }
+      if (p.position.distanceTo(fungusZoneCenter) > FUNGUS_ZONE_RADIUS) {
+        p.position.set(
+          fungusZoneCenter.x + (Math.random() - 0.5) * 2 * FUNGUS_ZONE_RADIUS,
+          fungusZoneCenter.y + Math.random() * 2,
+          fungusZoneCenter.z + (Math.random() - 0.5) * 2 * FUNGUS_ZONE_RADIUS
+        );
       }
-    
+    }   
   }
-
-
 }
 
-
-export function initDandelions(scene, center, count = 400) {
-  if (dandelionsInitialized) return;
-  beeZoneCenter.copy(center);
-
-  const geometry = new THREE.SphereGeometry(0.03, 3, 3);
-  const material = new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.8 });
-
-  for (let i = 0; i < count; i++) {
-    const p = new THREE.Mesh(geometry, material);
-
-    p.position.set(
-      center.x + (Math.random() - 0.5) * 2 * DANDELION_ZONE_RADIUS,
-      center.y + Math.random() * 0.5,
-      center.z + (Math.random() - 0.5) * 2 * DANDELION_ZONE_RADIUS
-    );
-
-    p.userData.velocity = new THREE.Vector3(
-      (Math.random() - 0.5) * 0.01,
-      0.003 + Math.random() * 0.005,
-      (Math.random() - 0.5) * 0.01
-    );
-
-    dandelionParticles.push(p);
-    dandelionGroup.add(p);
-  }
-
-  scene.add(dandelionGroup);
-  dandelionsInitialized = true;
-}
 
 export function initSpores(scene, center, count = 150) {
   if (sporesInitialized) return;
@@ -239,6 +227,8 @@ export function initSpores(scene, center, count = 150) {
   scene.add(sporeGroup);
   sporesInitialized = true;
 }
+
+
 
 
 

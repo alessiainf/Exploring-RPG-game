@@ -9,13 +9,11 @@ import { initDandelions } from './Weather.js';
 export let bee = null;
 export let honey = null;
 let beeMixer;
-
 let challengeStarted = false;
 let challengeCompleted = false;
 let timer = 0;
 let maxTime = 20;
 let activeItems = [];
-let beeTalked = false;
 let inDialogue = false;
 let dialogueStep = 0;
 let beeFlyingAction;
@@ -42,17 +40,15 @@ export async function loadBeeGame(scene) {
   scene.add(bee);
   setupBeePhysics();
 
-
+  //default animation for bee
   if (beeGltf.animations && beeGltf.animations.length > 0) {
     const flyingClip = beeGltf.animations.find(clip => clip.name === "MonsterArmature|Flying");
-
     if (flyingClip) {
       beeMixer = new THREE.AnimationMixer(bee);
       beeFlyingAction = beeMixer.clipAction(flyingClip);
-      beeFlyingAction.setEffectiveTimeScale(0.3); // default: lenta
+      beeFlyingAction.setEffectiveTimeScale(0.3); // rallentata
       beeFlyingAction.setLoop(THREE.LoopRepeat);
       beeFlyingAction.play();
-
     } else {
       console.warn('Animazione "MonsterArmature|Flying" non trovata');
     }
@@ -115,6 +111,7 @@ export async function loadBeeGame(scene) {
   counterBox.style.zIndex = '1000';
   document.body.appendChild(counterBox);
 
+  // dandelions for the weather
   initDandelions(scene, bee.position.clone());
 }
 
@@ -124,29 +121,26 @@ function setupBeePhysics() {
     console.warn('Physics world not ready, skipping bee physics setup');
     return;
   }
-
   if (bee) {
     physicsWorld.addBeeCollider();
   }
-  
 }
-
 
 export {beeMixer};
 
 export function updateBeeGame(playerPosition, scene) {
+  // Calcola la distanza del player dall'ape e dal miele
   const distanceToBee = playerPosition.distanceTo(bee.position);
   const distanceToHoney = honey ? playerPosition.distanceTo(honey.position) : Infinity;
+  
   const dialogueBox = document.getElementById('dialogueBox');
-
   // Se premi F mentre un messaggio (tipo 'tempo scaduto' o 'hai raccolto tutto') è visibile, chiudilo
-if (!inDialogue && dialogueBox.style.display !== 'none' && keys.fPressed) {
-  keys.fPressed = false;
-  dialogueBox.style.display = 'none';
-  dialogueBox.innerHTML = '';
-  return;
-}
-
+  if (!inDialogue && dialogueBox.style.display !== 'none' && keys.fPressed) {
+    keys.fPressed = false;
+    dialogueBox.style.display = 'none';
+    dialogueBox.innerHTML = '';
+    return;
+  }
 
   const honeyLabel = document.getElementById('honeyLabel');
   const timerBox = document.getElementById('timerBox');
@@ -162,46 +156,50 @@ if (!inDialogue && dialogueBox.style.display !== 'none' && keys.fPressed) {
 
   // Gestione dialogo con ape
   if (distanceToBee < 2 && !challengeStarted) {
-  promptState.active = true;
-  promptState.text = '🐝 Premi F per parlare con l\'ape';
+    promptState.active = true;
+    promptState.text = '🐝 Premi F per parlare con l\'ape';
 
-  if (keys.fPressed) {
-    keys.fPressed = false;
+    if (keys.fPressed) {
+      keys.fPressed = false;
 
-    if (inDialogue) {
-      dialogueStep++;
-      showBeeDialogueLine(scene);
-      return;
-    }
+      if (inDialogue) {
+        dialogueStep++;
+        showBeeDialogueLine(scene);
+        return;
+      }
 
-    if (dialogueBox.style.display !== 'none') {
-      dialogueBox.style.display = 'none';
-      return;
-    }
+      if (dialogueBox.style.display !== 'none') {
+        dialogueBox.style.display = 'none';
+        return;
+      }
 
-    if (challengeCompleted) {
-      // Dialogo post-vittoria
-      inDialogue = true;
-      dialogueStep = 100; // nuovo step speciale
-      showBeeDialogueLine(scene);
-    } else {
-      // Dialogo iniziale/standard
-      startBeeDialogue(scene);
+      if (challengeCompleted) {
+        // Dialogo post-vittoria
+        inDialogue = true;
+        dialogueStep = 100; // nuovo step speciale
+        showBeeDialogueLine(scene);
+      } else {
+        // Dialogo iniziale/standard
+        startBeeDialogue(scene);
+      }
     }
   }
-}
 
 
   // Se sfida attiva, aggiorna timer e raccoglimento nettari
   if (challengeStarted && !challengeCompleted) {
+    //tempo decrementa ogni 1/60 frame = 1s
     timer -= 1 / 60;
+    //mostra il cronometro a schermo
     timerBox.style.display = 'block';
+    //ceil è una funzione che arrotonda il tempo per eccesso
     timerBox.textContent = `⏳ ${Math.ceil(timer)}s`;
+    //contatore di nettari raccolti
     const counterBox = document.getElementById('counterBox');
     counterBox.style.display = 'block';
     counterBox.textContent = `${5 - activeItems.length}/5 raccolti`;
 
-
+    //se il player è vicino ad un nettare, allora lo rimuove dalla scena
     for (let i = activeItems.length - 1; i >= 0; i--) {
       if (playerPosition.distanceTo(activeItems[i].position) < 1) {
         scene.remove(activeItems[i]);
@@ -209,6 +207,7 @@ if (!inDialogue && dialogueBox.style.display !== 'none' && keys.fPressed) {
       }
     }
 
+    //verifica di vittoria o sconfitta
     if (activeItems.length === 0) {
       completeChallenge(timerBox);
     } else if (timer <= 0) {
@@ -227,7 +226,7 @@ if (!inDialogue && dialogueBox.style.display !== 'none' && keys.fPressed) {
       keys.fPressed = false;
       scene.remove(honey);
       honey = null; 
-      collectItem();
+      collectItem(); //contatore sale
       honeyLabel.style.display = 'none';
       dialogueBox.innerHTML = '';
       dialogueBox.style.display = 'none';
@@ -244,15 +243,12 @@ if (!inDialogue && dialogueBox.style.display !== 'none' && keys.fPressed) {
 }
 
 
-
-
+//se inizia il dialogo con l'ape, mostra le linee di dialogo
 function startBeeDialogue(scene) {
   inDialogue = true;
   dialogueStep = 0;
   showBeeDialogueLine(scene);
 }
-
-
 function showBeeDialogueLine(scene) {
   const dialogueBox = document.getElementById('dialogueBox');
   dialogueBox.innerHTML = '';
@@ -260,45 +256,43 @@ function showBeeDialogueLine(scene) {
 
   let text = '';
   if (dialogueStep === 100) {
-  const dialogueBox = document.getElementById('dialogueBox');
-  dialogueBox.innerHTML = '';
-  dialogueBox.style.display = 'block';
+    const dialogueBox = document.getElementById('dialogueBox');
+    dialogueBox.innerHTML = '';
+    dialogueBox.style.display = 'block';
 
-  const p = document.createElement('p');
-  p.textContent = '🐝 Rinnah: Zzzzzz—COSA?! Hai davvero raccolto tutto?! Bah! Io... volevo solo farti correre un po’! Ma vabbè... prendi il Miele Dorato prima che cambi idea!';  
-  dialogueBox.appendChild(p);
-
-  inDialogue = false;
-  beeFlyingAction.setEffectiveTimeScale(0.3);
-  return;
-}
-
+    const p = document.createElement('p');
+    p.textContent = '🐝 Rinnah: Zzzzzz—COSA?! Hai davvero raccolto tutto?! Bah! Io... volevo solo farti correre un po’! Ma vabbè... prendi il Miele Dorato prima che cambi idea!';  
+    dialogueBox.appendChild(p);
+    inDialogue = false;
+    beeFlyingAction.setEffectiveTimeScale(0.3);
+    return;
+  }
+  //usa dialogue step per gestire la conversazione
   switch (dialogueStep) {
-  case 0:
-    text = '🧙‍♀️ Strega: Un\'ape! Perfetto, magari ha del miele...';
-    break;
-  case 1:
-    text = '🐝 Ape: Zzzzz... EH?! Chi osa disturbarmi?! Oh, un altro bipede...';
-    break;
-  case 2:
-    text = '🐝 Ape: Lascia che indovini: vuoi il Miele Dorato! Tutti lo vogliono. Nessuno lo merita!';
-    break;
-  case 3:
-    text = '🧙‍♀️ Strega: Non voglio litigare, ma sono disposto a tutto per quel miele.';
-    break;
-  case 4:
-    text = '🐝 Rinnah: Io sono Rinnah, Regina della Radura, Protrettrice del Nettare! E no, non lo do a chiunque!';
-    break;
-  case 5:
-    text = '🐝 Rinnah: Però... potrei fare un\'eccezione. Ma solo se dimostri d\'essere più veloce di un calabrone affamato!';
-    break;
-  case 6:
-    text = '🐝 Rinnah: Ecco la sfida: raccogli i 5 nettari sparsi nella radura in 30 secondi. Se ci riesci, potrei... *forse*... darti una goccia del mio miele.';
-    break;
-  case 7:
-    text = '🐝 Rinnah: Bene, accetti la sfida?';
-
-
+    case 0:
+      text = '🧙‍♀️ Strega: Un\'ape! Perfetto, magari ha del miele...';
+      break;
+    case 1:
+      text = '🐝 Ape: Zzzzz... EH?! Chi osa disturbarmi?! Oh, un altro bipede...';
+      break;
+    case 2:
+      text = '🐝 Ape: Lascia che indovini: vuoi il Miele Dorato! Tutti lo vogliono. Nessuno lo merita!';
+      break;
+    case 3:
+      text = '🧙‍♀️ Strega: Non voglio litigare, ma sono disposto a tutto per quel miele.';
+      break;
+    case 4:
+      text = '🐝 Rinnah: Io sono Rinnah, Regina della Radura, Protrettrice del Nettare! E no, non lo do a chiunque!';
+      break;
+    case 5:
+      text = '🐝 Rinnah: Però... potrei fare un\'eccezione. Ma solo se dimostri d\'essere più veloce di un calabrone affamato!';
+      break;
+    case 6:
+      text = '🐝 Rinnah: Ecco la sfida: raccogli i 5 nettari sparsi nella radura in 20 secondi. Se ci riesci, potrei... *forse*... darti una goccia del mio miele.';
+      break;
+    case 7:
+      text = '🐝 Rinnah: Bene, accetti la sfida?';
+      //sfida accetata
       const btnYes = document.createElement('button');
       btnYes.classList.add('dialogue-button');
       btnYes.textContent = 'SÌ';
@@ -308,7 +302,7 @@ function showBeeDialogueLine(scene) {
         beeFlyingAction.setEffectiveTimeScale(0.3);
         startChallenge(scene);
       };
-
+      //sfida rifiutata
       const btnNo = document.createElement('button');
       btnNo.classList.add('dialogue-button');
       btnNo.textContent = 'NO';
@@ -332,21 +326,21 @@ function showBeeDialogueLine(scene) {
       return;
   }
 
+  //gestisce animazione ape
   if (text.startsWith('🐝') && beeFlyingAction) {
     beeFlyingAction.setEffectiveTimeScale(1.5); // parla → veloce
     
   }
-  else if (text.startsWith('🧝‍♂️') && beeFlyingAction)  {
+  else if (text.startsWith('🧙‍♀️') && beeFlyingAction)  {
     beeFlyingAction.setEffectiveTimeScale(0.3); // non parla 
   }
-
 
   const p = document.createElement('p');
   p.textContent = text;
   dialogueBox.appendChild(p);
 }
 
-
+// Genera i nettari (mesh sferiche) nel campo
 function startChallenge(scene) {
   challengeStarted = true;
   timer = maxTime;
@@ -362,6 +356,7 @@ function startChallenge(scene) {
   });
 }
 
+//display a block with challnge complete
 function completeChallenge(timerBox) {
   challengeStarted = false;
   challengeCompleted = true;
@@ -373,6 +368,7 @@ function completeChallenge(timerBox) {
 }
 
 
+// display a block with challenge failed
 function failChallenge(scene, timerBox) {
   challengeStarted = false;
   timerBox.style.display = 'none';

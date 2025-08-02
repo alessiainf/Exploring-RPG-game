@@ -6,10 +6,10 @@ let currentLights = null;
 export function setupLights(scene) {
 
   // Luce ambientale soft viola/blu
-  const ambientLight = new THREE.AmbientLight(0x554477, 0.5); 
+  const ambientLight = new THREE.AmbientLight(0x554477, 0.3); 
 
-  // Luce direzionale con ombre morbide e meno pixelate
-  const directionalLight = new THREE.DirectionalLight(0xaa88ff, 1.0);
+  // Luce direzionale 
+  const directionalLight = new THREE.DirectionalLight(0xaa88ff, 0.7);
   directionalLight.position.set(-30, 80, 10);
   directionalLight.target.position.set(12, 0, -3);
   scene.add(directionalLight.target);
@@ -26,8 +26,8 @@ export function setupLights(scene) {
   directionalLight.shadow.camera.top = 100;
   directionalLight.shadow.camera.bottom = -80;
 
-  // Usa normalBias per evitare artefatti con VSM
-  directionalLight.shadow.normalBias = 0.07;
+  // normalBias per evitare artefatti 
+  directionalLight.shadow.normalBias = 0.03;
 
   scene.add(ambientLight);
   scene.add(directionalLight);

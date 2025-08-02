@@ -8,9 +8,6 @@ import { promptState } from './main.js';
 
 let book = null;
 let bookRead = false;
-let nearBook = false;
-let smokeParticles = [];
-let smokeClock = new THREE.Clock();
 let bookMesh = null;
 let table = null;
 export { book, bookRead, table, bookMesh };
@@ -20,24 +17,15 @@ export { book, bookRead, table, bookMesh };
 export async function loadBook(scene) {
   const loader = new GLTFLoader();
 
-  // Carica il libro
   const gltfBook = await loader.loadAsync('assets/models/book.glb');
   book = gltfBook.scene;
   bookMesh = book;
-
-  // Carica il tavolo
   const gltfTable = await loader.loadAsync('assets/models/Table.glb');
   table = gltfTable.scene;
-
-
-  // Posizione comune per entrambi
   const basePosition = new THREE.Vector3(-9, -0.1, -7);
-
-  // Tavolo
   table.position.copy(basePosition);
   table.scale.set(1.2, 1.2, 1.2);
   scene.add(table);
-
   table.traverse(child => {
     child.castShadow = true;
     child.receiveShadow = true;
@@ -48,13 +36,11 @@ export async function loadBook(scene) {
   book.scale.set(1.5, 1.5, 1.5);
   book.rotation.set(-Math.PI, Math.PI, Math.PI / 2);
   scene.add(book);
-
   book.traverse(child => {
     child.castShadow = true;
     child.receiveShadow = true;
   });
 }
-
 
 
 export function updateBookInteraction(playerPosition) {
@@ -100,7 +86,7 @@ export function updateBookInteraction(playerPosition) {
 
 
 
-// IntroManager.js
+// Game intro
 export class IntroManager {
   constructor(startCallback) {
     this.container = document.createElement('div');
@@ -186,79 +172,76 @@ export class IntroManager {
   }
 
 
-showNext() {
-  this.index++;
+  showNext() {
+    this.index++;
 
-  // Se finita la sequenza narrativa: fade out
-  if (this.index >= this.images.length) {
-    this.container.style.transition = 'opacity 1s';
-    this.container.style.opacity = 0;
-    setTimeout(() => {
-      document.body.removeChild(this.container);
-      this.startCallback();
-    }, 1000);
-    return;
-  }
+    // Se finita la sequenza narrativa: fade out
+    if (this.index >= this.images.length) {
+      this.container.style.transition = 'opacity 1s';
+      this.container.style.opacity = 0;
+      setTimeout(() => {
+        document.body.removeChild(this.container);
+        this.startCallback();
+      }, 1000);
+      return;
+    }
 
-  // Alla prima immagine della storia: cambia sfondo da immagine → viola
-  if (this.index === 0) {
-    this.container.style.backgroundImage = '';
-    this.container.style.backgroundColor = this.narrativeBackground;
-  }
+    // Alla prima immagine della storia: cambia sfondo da immagine → viola
+    if (this.index === 0) {
+      this.container.style.backgroundImage = '';
+      this.container.style.backgroundColor = this.narrativeBackground;
+    }
 
-  // Crea slide narrativa con fade-in
-  const slide = document.createElement('div');
-  slide.style.position = 'absolute';
-  slide.style.top = 0;
-  slide.style.left = 0;
-  slide.style.width = '100%';
-  slide.style.height = '100%';
-  slide.style.display = 'flex';
-  slide.style.flexDirection = 'column';
-  slide.style.alignItems = 'center';
-  slide.style.justifyContent = 'center';
-  slide.style.opacity = 0;
-  slide.style.transition = 'opacity 1s';
-
-  const img = document.createElement('img');
-  img.src = this.images[this.index];
-  img.style.height = '100vh';
-  img.style.width = 'auto';
-  img.style.objectFit = 'contain';
-  img.style.display = 'block';
-  img.style.margin = '0 auto';
-
-  const caption = document.createElement('div');
-  caption.textContent = this.texts[this.index];
-  caption.style.position = 'absolute';
-  caption.style.bottom = '60px';
-  caption.style.width = '100%';
-  caption.style.textAlign = 'center';
-  caption.style.color = 'white';
-  caption.style.fontSize = '28px';
-  caption.style.backgroundColor = 'rgba(0, 0, 0, 0.5)';
-  caption.style.padding = '20px';
-  caption.style.fontFamily = 'Georgia, serif';
-
-  slide.appendChild(img);
-  slide.appendChild(caption);
-
-  this.container.innerHTML = '';
-  this.container.appendChild(slide);
-
-  // Forza reflow e fade-in
-  void slide.offsetWidth;
-  slide.style.opacity = 1;
-
-  // Al clic: fade-out e passa alla prossima slide
-  this.container.onclick = () => {
+    // Crea slide narrativa con fade-in
+    const slide = document.createElement('div');
+    slide.style.position = 'absolute';
+    slide.style.top = 0;
+    slide.style.left = 0;
+    slide.style.width = '100%';
+    slide.style.height = '100%';
+    slide.style.display = 'flex';
+    slide.style.flexDirection = 'column';
+    slide.style.alignItems = 'center';
+    slide.style.justifyContent = 'center';
     slide.style.opacity = 0;
-    this.container.onclick = null;
-    setTimeout(() => this.showNext(), 1000);
-  };
-}
+    slide.style.transition = 'opacity 1s';
 
+    const img = document.createElement('img');
+    img.src = this.images[this.index];
+    img.style.height = '100vh';
+    img.style.width = 'auto';
+    img.style.objectFit = 'contain';
+    img.style.display = 'block';
+    img.style.margin = '0 auto';
 
+    const caption = document.createElement('div');
+    caption.textContent = this.texts[this.index];
+    caption.style.position = 'absolute';
+    caption.style.bottom = '60px';
+    caption.style.width = '100%';
+    caption.style.textAlign = 'center';
+    caption.style.color = 'white';
+    caption.style.fontSize = '28px';
+    caption.style.backgroundColor = 'rgba(0, 0, 0, 0.5)';
+    caption.style.padding = '20px';
+    caption.style.fontFamily = 'Georgia, serif';
 
+    slide.appendChild(img);
+    slide.appendChild(caption);
+
+    this.container.innerHTML = '';
+    this.container.appendChild(slide);
+
+    // Forza reflow e fade-in
+    void slide.offsetWidth;
+    slide.style.opacity = 1;
+
+    // Al clic: fade-out e passa alla prossima slide
+    this.container.onclick = () => {
+      slide.style.opacity = 0;
+      this.container.onclick = null;
+      setTimeout(() => this.showNext(), 1000);
+    };
+  }
 }
 
