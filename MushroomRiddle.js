@@ -13,16 +13,20 @@ const mushrooms = [];
 let tentacle = null;
 const answered = [false, false, false];  // uno per ogni riddle
 export {mushrooms}
-
+let isTalkingSimon = false;
+let isTalkingBritney = false;
 let mushroomRoot = null;
 export { mushroomRoot };
+export { isTalkingSimon, isTalkingBritney };
 
-
-//animation
+//mushroom animation
 let boneSimon = null;
 let boneL_Arm = null;
 let boneR_Arm = null;
-
+let currentTalkingBone = null;
+let armsActive = false;
+let boneBritney = null;
+export{currentTalkingBone, boneSimon, boneL_Arm, boneR_Arm, armsActive, boneBritney};
 
 const riddles = [
   {
@@ -42,146 +46,37 @@ const riddles = [
   }
 ];
 
-
-let currentRiddleIndex = -1;
-let riddleActive = false;
-
 export async function loadMushrooms(scene) {
   if (!physicsWorld.ready) {
     await physicsWorld.init();
   }
-
   const loader = new GLTFLoader();
   const gltf = await loader.loadAsync('assets/models/Mushrooms In A Trenc_an.glb');
   const mushroomGroup = gltf.scene;
-
   mushroomGroup.position.set(63, -0.1, -21);
   mushroomGroup.rotation.set(0, 0, 0);
   mushroomGroup.scale.set(0.015, 0.015, 0.015);
   scene.add(mushroomGroup);
   mushroomRoot = mushroomGroup;
-
-
   mushroomGroup.traverse(child => {
     child.castShadow = true;
     child.receiveShadow = true;
   });
 
-  
+  //estrazione ossa per animazione
   mushroomGroup.traverse(child => {
-  if (child.isBone) {
-    if (child.name === 'CC_Base_Head') boneSimon = child;
-    if (child.name === 'CC_Base_L_Upperarm') boneL_Arm = child;
-    if (child.name === 'CC_Base_R_Upperarm') boneR_Arm = child;
-    if (child.name === 'CC_Base_Spine01') boneBritney = child;
-  }
-});
-
+    if (child.isBone) {
+      if (child.name === 'CC_Base_Head') boneSimon = child;
+      if (child.name === 'CC_Base_L_Upperarm') boneL_Arm = child;
+      if (child.name === 'CC_Base_R_Upperarm') boneR_Arm = child;
+      if (child.name === 'CC_Base_Spine01') boneBritney = child;
+    }
+  });
 
   mushrooms.push(mushroomGroup); 
   setupMushroomPhysics(mushroomGroup);
   initSpores(scene, mushroomRoot.position);
-
 }
-
-
-//mushroom animation
-let currentTalkingBone = null;
-let armsActive = false;
-let boneBritney = null;
-export{currentTalkingBone, boneSimon, boneL_Arm, boneR_Arm, armsActive, boneBritney};
-let isTalkingSimon = false;
-let isTalkingBritney = false;
-
-export { isTalkingSimon, isTalkingBritney };
-
-//head aniamtion (simon)
-export function animateTalkingHead(bone, time) {
-  if (!bone) return;
-
-  // Respiro (sempre attivo)
-  const breathAmplitude = 0.04;
-  const breathFrequency = 0.2;
-  const breathOffset = Math.sin(time * breathFrequency * Math.PI * 2) * breathAmplitude;
-  bone.rotation.x = breathOffset;
-
-  // Movimento laterale solo se sta parlando
-  if (isTalkingSimon) {
-    const talkAngle = Math.sin(time * 10) * 0.05;
-    bone.rotation.y = talkAngle;
-  } else {
-    bone.rotation.y = 0; // neutro
-  }
-}
-
-
-
-//arms animation (braum)
-export function animateArms(timeMs) {
-  if (!boneL_Arm || !boneR_Arm) return;
-
-  const time = timeMs / 1000;
-
-  // Movimento di respirazione (sempre attivo)
-  const breathAmplitude = 0.09;
-  const breathFrequency = 0.2;
-  const breathOffset = Math.sin(time * breathFrequency * Math.PI * 2) * breathAmplitude;
-
-  // Movimento attivo (gesticolazione)
-  const gestureAmplitude = 0.2;
-  const gestureFrequency = 1.5;
-  const gestureOffset = Math.sin(time * gestureFrequency * Math.PI * 2) * gestureAmplitude;
-
-  // Se sta parlando con braccia attive → gesticolazione + respiro
-  if (armsActive) {
-    boneL_Arm.rotation.x = gestureOffset - 0.4 + breathOffset;
-    boneR_Arm.rotation.x = -gestureOffset - 0.4 + breathOffset;
-  } else {
-    // Solo respirazione
-    boneL_Arm.rotation.x = -0.4 + breathOffset;
-    boneR_Arm.rotation.x = -0.4 + breathOffset;
-  }
-}
-
-
-//leg animation (britney)
-export function animateBritney(timeMs) {
-  if (!boneBritney) return;
-
-  const time = timeMs / 1000;
-
-  // Respiro (sempre attivo)
-  const breathAmplitude = 0.02;
-  const breathFrequency = 0.25;
-  const breath = Math.sin(time * breathFrequency * Math.PI * 2) * breathAmplitude;
-
-  // Oscillazione solo se sta parlando
-  let swing = 0;
-  if (isTalkingBritney) {
-    const swingAmplitude = 0.04;
-    const swingFrequency = 1;
-    swing = Math.sin(time * swingFrequency * Math.PI * 2) * swingAmplitude;
-  }
-
-  boneBritney.rotation.x = swing + breath;
-}
-
-
-export function updateMushroomLogic(time) {
-  // Aggiorna i flag
-  isTalkingSimon = (currentTalkingBone === boneSimon);
-  isTalkingBritney = (currentTalkingBone === boneBritney);
-
-  // Anima braccia (sempre)
-  animateArms(time);
-
-  // Anima Simon e Britney
-  animateTalkingHead(boneSimon, time / 1000);
-  animateBritney(time);
-}
-
-
-
 
 export async function loadTentacle(scene) {
   const loader = new GLTFLoader();
@@ -208,6 +103,89 @@ function setupMushroomPhysics(mushroomGroup) {
 }
 
 
+//head animation (simon)
+export function animateTalkingHead(bone, time) {
+  if (!bone) return;
+
+  // Respiro 
+  //La testa oscilla lungo l’asse X con un movimento sinusoidale lento
+  const breathAmplitude = 0.04;
+  const breathFrequency = 0.2;
+  const breathOffset = Math.sin(time * breathFrequency * Math.PI * 2) * breathAmplitude;
+  bone.rotation.x = breathOffset;
+
+  // Se parla
+  //movimento testa anche lungo asse y velocemente
+  if (isTalkingSimon) {
+    const talkAngle = Math.sin(time * 10) * 0.05;
+    bone.rotation.y = talkAngle;
+  } else {
+    bone.rotation.y = 0; // neutro
+  }
+}
+
+
+
+//arms animation (braum)
+export function animateArms(timeMs) {
+  if (!boneL_Arm || !boneR_Arm) return;
+
+  const time = timeMs / 1000;
+
+  // Respiro 
+  //movimento su e giu delle braccia
+  const breathAmplitude = 0.09;
+  const breathFrequency = 0.2;
+  const breathOffset = Math.sin(time * breathFrequency * Math.PI * 2) * breathAmplitude;
+  boneL_Arm.rotation.x = -0.4 + breathOffset;
+  boneR_Arm.rotation.x = -0.4 + breathOffset;
+
+  // Se sta parlando muove braccia
+  //oscilla le braccia piu velocemente (frequenza maggiore)
+  const gestureAmplitude = 0.2;
+  const gestureFrequency = 1.0;
+  const gestureOffset = Math.sin(time * gestureFrequency * Math.PI * 2) * gestureAmplitude; 
+  if (armsActive) {
+    boneL_Arm.rotation.x = gestureOffset - 0.4 ;
+    boneR_Arm.rotation.x = -gestureOffset - 0.4 ;
+  } 
+}
+
+
+//leg animation (britney)
+export function animateBritney(timeMs) {
+  if (!boneBritney) return;
+
+  const time = timeMs / 1000;
+
+  // Respiro (sempre attivo)
+  //move along x axis but remain always active even when speaking
+  const breathAmplitude = 0.02;
+  const breathFrequency = 0.25;
+  const breath = Math.sin(time * breathFrequency * Math.PI * 2) * breathAmplitude;
+
+  // Oscillazione solo se sta parlando
+  let swing = 0;
+  if (isTalkingBritney) {
+    const swingAmplitude = 0.04;
+    const swingFrequency = 1;
+    swing = Math.sin(time * swingFrequency * Math.PI * 2) * swingAmplitude;
+  }
+  boneBritney.rotation.x = swing + breath;
+}
+
+
+export function updateMushroomLogic(time) {
+  // Aggiorna i flag
+  isTalkingSimon = (currentTalkingBone === boneSimon);
+  isTalkingBritney = (currentTalkingBone === boneBritney);
+
+  // Anima (respiro o conversazione)
+  animateArms(time);
+  animateTalkingHead(boneSimon, time / 1000);
+  animateBritney(time);
+}
+
 
 export function updateMushroomInteraction(playerPosition) {
   const dialogueBox = document.getElementById('dialogueBox');
@@ -215,6 +193,7 @@ export function updateMushroomInteraction(playerPosition) {
   const dist = mush.position.distanceTo(playerPosition);
   const allAnswered = answered.every(val => val);
 
+  //se il giocatore è vicino al fungo compare la finestra di conversazione
   if (dist < 2) {
     if (keys.fPressed) {
       keys.fPressed = false;
@@ -237,7 +216,6 @@ export function updateMushroomInteraction(playerPosition) {
       }
     }
 
-
     if (dialogueBox.style.display === 'none') {
       promptState.active = true;
       promptState.text = allAnswered
@@ -247,11 +225,13 @@ export function updateMushroomInteraction(playerPosition) {
   }
 }
 
+
 function startDialogueSequence() {
   inDialogue = true;
   dialogueStep = 0;
   showDialogueLine(); // mostra la prima battuta
 }
+
 function showDialogueLine() {
   const dialogueBox = document.getElementById('dialogueBox');
   dialogueBox.style.display = 'block';
@@ -261,7 +241,6 @@ function showDialogueLine() {
   currentTalkingBone = null;
   isTalkingSimon = false;
   isTalkingBritney = false;
-
   let text = '';
 
   switch (dialogueStep) {
@@ -339,7 +318,8 @@ function showDialogueLine() {
       dialogueBox.appendChild(document.createElement('p')).textContent = text;
       dialogueBox.appendChild(btnYes);
       dialogueBox.appendChild(btnNo);
-      return; // fermati qui, altrimenti fa il default
+      return; 
+
     default:
       text = '🍄 Fungo: ...';
       inDialogue = false;
@@ -351,8 +331,6 @@ function showDialogueLine() {
   p.textContent = text;
   dialogueBox.appendChild(p);
 }
-
-
 
 
 export function updateTentacleInteraction(playerPosition) {
@@ -379,7 +357,6 @@ export function updateTentacleInteraction(playerPosition) {
 
 export function animateTentacle(time) {
   if (!tentacle) return;
-
   // Rotazione continua sul proprio asse
   tentacle.rotation.y += 0.01;
 }
