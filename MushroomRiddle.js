@@ -18,6 +18,8 @@ let isTalkingBritney = false;
 let mushroomRoot = null;
 export { mushroomRoot };
 export { isTalkingSimon, isTalkingBritney };
+let currentRiddleIndex = -1;
+let riddleActive = false;
 
 //mushroom animation
 let boneSimon = null;
