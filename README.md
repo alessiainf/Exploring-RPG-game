@@ -39,6 +39,30 @@ Here are a few glimpses from inside the game world:
 
 ---
 
+# How to run the game locally 
+
+To try the game on your computer, follow these steps:
+
+## Requirements
+- [Node.js](https://nodejs.org/) (version 16 or higher, 18+ recommended)
+
+## Installation
+1. Clone this repository:
+   ```bash
+   git clone <REPO-URL>
+   cd <folder-name>
+2. Install dependencies:
+  npm install
+  
+3. Start the development server:
+npm run dev
+or
+npx vite
+
+4. Open in your browser the link shown in the terminal (usually http://localhost:5173).
+
+---
+
 ## Acknowledgments
 Special thanks to **Quaternius** for making all 3D models freely available on [Poly Pizza](https://poly.pizza/u/Quaternius).  
 All the assets used in this project come from his incredible collection.
