@@ -52,14 +52,17 @@ To try the game on your computer, follow these steps:
    git clone <REPO-URL>
    cd <folder-name>
 2. Install dependencies:
-  npm install
+   ```bash
+   npm install
   
-3. Start the development server:
-npm run dev
-or
-npx vite
+4. Start the development server:
+   ```bash
+   npm run dev
+   or
+   ```bash
+   npx vite
 
-4. Open in your browser the link shown in the terminal (usually http://localhost:5173).
+5. Open in your browser the link shown in the terminal (usually http://localhost:5173).
 
 ---
 
