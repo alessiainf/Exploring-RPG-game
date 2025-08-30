@@ -49,18 +49,18 @@ To try the game on your computer, follow these steps:
 ## Installation
 1. Clone this repository:
    ```bash
-   git clone <REPO-URL>
-   cd <folder-name>
+   git clone https://github.com/alessiainf/Exploring-RPG-game.git
+   cd Exploring-RPG-game
 2. Install dependencies:
    ```bash
    npm install
   
 4. Start the development server:
-   ```bash
-   npm run dev
-   or
-   ```bash
-   npx vite
+      ```bash
+      npm run dev
+or
+      ```bash
+      npx vite
 
 5. Open in your browser the link shown in the terminal (usually http://localhost:5173).
 
