@@ -42,7 +42,3 @@ Here are a few glimpses from inside the game world:
 ## Acknowledgments
 Special thanks to **Quaternius** for making all 3D models freely available on [Poly Pizza](https://poly.pizza/u/Quaternius).  
 All the assets used in this project come from his incredible collection.
-
-## Notes
-
-This game is currently under development.  
